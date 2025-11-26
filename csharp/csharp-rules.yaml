@@ -1,0 +1,783 @@
+rules:
+  - id: csharp-sql-injection
+    languages: [csharp]
+    message: "Potential SQL injection vulnerability. Use parameterized queries instead of string concatenation."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CMD.CommandText = $X + $Y;
+          - pattern: |
+              $CMD.CommandText = $"...{$VAR}...";
+          - pattern: |
+              $CMD.CommandText = string.Format(..., $VAR, ...);
+          - pattern: |
+              new SqlCommand($X + $Y, ...)
+          - pattern: |
+              new SqlCommand($"...{$VAR}...", ...)
+
+  - id: csharp-command-injection
+    languages: [csharp]
+    message: "Potential command injection. Avoid using user input in process arguments."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              Process.Start($CMD, $ARGS + $USER_INPUT)
+          - pattern: |
+              $P.StartInfo.Arguments = $X + $Y;
+          - pattern: |
+              $P.StartInfo.Arguments = $"...{$VAR}...";
+
+  - id: csharp-hardcoded-secret
+    languages: [csharp]
+    message: "Hardcoded secret detected. Use secure configuration management instead."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              password = "...";
+          - pattern: |
+              apiKey = "...";
+          - pattern: |
+              connectionString = "...Password=...";
+          - pattern: |
+              $VAR = "...api_key...";
+          - pattern: |
+              $VAR = "...secret...";
+
+  - id: csharp-insecure-deserialization
+    languages: [csharp]
+    message: "Insecure deserialization detected. BinaryFormatter is vulnerable to deserialization attacks."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              new BinaryFormatter().Deserialize(...)
+          - pattern: |
+              $BF.Deserialize(...)
+          - pattern: |
+              new JavaScriptSerializer().Deserialize(...)
+
+  - id: csharp-path-traversal
+    languages: [csharp]
+    message: "Potential path traversal vulnerability. Validate and sanitize file paths."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              File.ReadAllText($PATH + $USER_INPUT)
+          - pattern: |
+              File.ReadAllText($"...{$VAR}...")
+          - pattern: |
+              Path.Combine(..., $USER_INPUT)
+          - pattern: |
+              new StreamReader($PATH + $USER_INPUT)
+
+  - id: csharp-weak-crypto
+    languages: [csharp]
+    message: "Weak cryptographic algorithm detected. Use modern algorithms like AES."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              new DESCryptoServiceProvider()
+          - pattern: |
+              new MD5CryptoServiceProvider()
+          - pattern: |
+              new SHA1CryptoServiceProvider()
+          - pattern: |
+              new RC2CryptoServiceProvider()
+          - pattern: |
+              MD5.Create()
+          - pattern: |
+              SHA1.Create()
+
+  - id: csharp-xxe-vulnerability
+    languages: [csharp]
+    message: "XML parser vulnerable to XXE attacks. Set DtdProcessing to Prohibit."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+      owasp: "A05:2021 - Security Misconfiguration"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $SETTINGS.DtdProcessing = DtdProcessing.Parse;
+          - pattern: |
+              new XmlReaderSettings { DtdProcessing = DtdProcessing.Parse }
+
+  - id: csharp-open-redirect
+    languages: [csharp]
+    message: "Potential open redirect vulnerability. Validate redirect URLs."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-601: Open Redirect"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              Redirect($USER_INPUT)
+          - pattern: |
+              Response.Redirect($USER_INPUT)
+          - pattern: |
+              RedirectToAction($USER_INPUT)
+
+  # ============================================================================
+  # LDAP INJECTION
+  # ============================================================================
+
+  - id: csharp-ldap-injection
+    languages: [csharp]
+    message: "Potential LDAP injection. Sanitize user input before LDAP queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-90: LDAP Injection"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $SEARCHER.Filter = $X + $USER_INPUT;
+          - pattern: |
+              $SEARCHER.Filter = $"...{$VAR}...";
+          - pattern: |
+              new DirectorySearcher($X + $USER_INPUT)
+          - pattern: |
+              new DirectorySearcher($"...{$VAR}...")
+
+  # ============================================================================
+  # XSS (CROSS-SITE SCRIPTING)
+  # ============================================================================
+
+  - id: csharp-xss-raw-output
+    languages: [csharp]
+    message: "Potential XSS vulnerability. Use Html.Encode() or @Html.Raw() carefully."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              Html.Raw($USER_INPUT)
+          - pattern: |
+              @Html.Raw($USER_INPUT)
+          - pattern: |
+              Response.Write($USER_INPUT)
+          - pattern: |
+              HttpContext.Response.Write($USER_INPUT)
+
+  - id: csharp-xss-innerhtml
+    languages: [csharp]
+    message: "Setting InnerHtml with user input can lead to XSS."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $ELEMENT.InnerHtml = $USER_INPUT;
+          - pattern: |
+              $ELEMENT.InnerHtml = $X + $Y;
+
+  # ============================================================================
+  # INSECURE COOKIES
+  # ============================================================================
+
+  - id: csharp-cookie-missing-secure
+    languages: [csharp]
+    message: "Cookie missing Secure flag. Set Secure = true for sensitive cookies."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-614: Sensitive Cookie Without Secure Flag"
+    pattern: |
+      new HttpCookie(...) { ... }
+    pattern-not: |
+      new HttpCookie(...) { ..., Secure = true, ... }
+
+  - id: csharp-cookie-missing-httponly
+    languages: [csharp]
+    message: "Cookie missing HttpOnly flag. Set HttpOnly = true to prevent XSS attacks."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-1004: Sensitive Cookie Without HttpOnly Flag"
+    pattern: |
+      new HttpCookie(...) { ... }
+    pattern-not: |
+      new HttpCookie(...) { ..., HttpOnly = true, ... }
+
+  # ============================================================================
+  # INSECURE SSL/TLS
+  # ============================================================================
+
+  - id: csharp-insecure-ssl-protocols
+    languages: [csharp]
+    message: "Insecure SSL/TLS protocol. Use TLS 1.2 or higher."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3;
+          - pattern: |
+              ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;
+          - pattern: |
+              ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11;
+          - pattern: |
+              SslProtocols.Ssl2
+          - pattern: |
+              SslProtocols.Ssl3
+          - pattern: |
+              SslProtocols.Tls
+          - pattern: |
+              SslProtocols.Tls11
+
+  - id: csharp-certificate-validation-disabled
+    languages: [csharp]
+    message: "SSL certificate validation disabled. This allows MITM attacks."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              ServicePointManager.ServerCertificateValidationCallback = (...) => true;
+          - pattern: |
+              ServerCertificateValidationCallback += (...) => true;
+          - pattern: |
+              $HANDLER.ServerCertificateCustomValidationCallback = (...) => true;
+
+  # ============================================================================
+  # INSECURE RANDOMNESS
+  # ============================================================================
+
+  - id: csharp-insecure-random
+    languages: [csharp]
+    message: "System.Random is not cryptographically secure. Use RNGCryptoServiceProvider for security-sensitive operations."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-338: Use of Cryptographically Weak PRNG"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              new Random()
+          - pattern: |
+              new Random($SEED)
+          - pattern: |
+              Random.Shared.Next(...)
+
+  # ============================================================================
+  # LOG INJECTION
+  # ============================================================================
+
+  - id: csharp-log-injection
+    languages: [csharp]
+    message: "Potential log injection. Sanitize user input before logging."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-117: Improper Output Neutralization for Logs"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              _logger.LogInformation($"...{$USER_INPUT}...")
+          - pattern: |
+              _logger.LogWarning($"...{$USER_INPUT}...")
+          - pattern: |
+              _logger.LogError($"...{$USER_INPUT}...")
+          - pattern: |
+              _logger.LogDebug($"...{$USER_INPUT}...")
+          - pattern: |
+              Console.WriteLine($"...{$USER_INPUT}...")
+          - pattern: |
+              Debug.WriteLine($"...{$USER_INPUT}...")
+          - pattern: |
+              Trace.WriteLine($"...{$USER_INPUT}...")
+
+  # ============================================================================
+  # CSRF PROTECTION
+  # ============================================================================
+
+  - id: csharp-missing-antiforgery-token
+    languages: [csharp]
+    message: "POST action missing [ValidateAntiForgeryToken]. Add CSRF protection."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-352: Cross-Site Request Forgery"
+      owasp: "A01:2021 - Broken Access Control"
+    pattern: |
+      [HttpPost]
+      public $RETURN_TYPE $METHOD(...) { ... }
+    pattern-not: |
+      [HttpPost]
+      [ValidateAntiForgeryToken]
+      public $RETURN_TYPE $METHOD(...) { ... }
+
+  # ============================================================================
+  # INFORMATION DISCLOSURE
+  # ============================================================================
+
+  - id: csharp-exception-information-disclosure
+    languages: [csharp]
+    message: "Exposing exception details can leak sensitive information."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-209: Information Exposure Through Error Message"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              return $EX.StackTrace;
+          - pattern: |
+              Response.Write($EX.StackTrace);
+          - pattern: |
+              return $EX.ToString();
+          - pattern: |
+              Json($EX)
+          - pattern: |
+              return Content($EX.Message);
+
+  - id: csharp-debug-enabled
+    languages: [csharp]
+    message: "Debug mode should be disabled in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              <compilation debug="true" ... />
+          - pattern: |
+              Debug = true
+          - pattern: |
+              #if DEBUG
+
+  # ============================================================================
+  # SERVER-SIDE REQUEST FORGERY (SSRF)
+  # ============================================================================
+
+  - id: csharp-ssrf
+    languages: [csharp]
+    message: "Potential SSRF vulnerability. Validate and whitelist URLs."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-918: Server-Side Request Forgery"
+      owasp: "A10:2021 - Server-Side Request Forgery"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              new HttpClient().GetAsync($USER_INPUT)
+          - pattern: |
+              new HttpClient().PostAsync($USER_INPUT, ...)
+          - pattern: |
+              new WebClient().DownloadString($USER_INPUT)
+          - pattern: |
+              new WebClient().DownloadFile($USER_INPUT, ...)
+          - pattern: |
+              WebRequest.Create($USER_INPUT)
+          - pattern: |
+              HttpWebRequest.Create($USER_INPUT)
+
+  # ============================================================================
+  # MASS ASSIGNMENT / OVER-POSTING
+  # ============================================================================
+
+  - id: csharp-mass-assignment
+    languages: [csharp]
+    message: "Potential mass assignment vulnerability. Use [Bind] attribute or view models."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-915: Mass Assignment"
+    pattern: |
+      public $RETURN_TYPE $METHOD($MODEL_TYPE $MODEL) {
+        ...
+        $DB.SaveChanges();
+        ...
+      }
+
+  # ============================================================================
+  # ENTITY FRAMEWORK RAW SQL
+  # ============================================================================
+
+  - id: csharp-ef-raw-sql-injection
+    languages: [csharp]
+    message: "Raw SQL in Entity Framework. Use parameterized queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $DB.Database.ExecuteSqlRaw($QUERY + $USER_INPUT)
+          - pattern: |
+              $DB.Database.ExecuteSqlRaw($"...{$VAR}...")
+          - pattern: |
+              $DB.Database.SqlQuery<$T>($QUERY + $USER_INPUT)
+          - pattern: |
+              $DB.Database.SqlQuery<$T>($"...{$VAR}...")
+          - pattern: |
+              FromSqlRaw($QUERY + $USER_INPUT)
+          - pattern: |
+              FromSqlRaw($"...{$VAR}...")
+
+  # ============================================================================
+  # REGEX DOS (ReDoS)
+  # ============================================================================
+
+  - id: csharp-regex-dos
+    languages: [csharp]
+    message: "Regex without timeout can be vulnerable to ReDoS. Set RegexOptions.MatchTimeout."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-1333: Inefficient Regular Expression Complexity"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              new Regex($PATTERN)
+          - pattern: |
+              Regex.Match($INPUT, $PATTERN)
+          - pattern: |
+              Regex.Matches($INPUT, $PATTERN)
+          - pattern: |
+              Regex.Replace($INPUT, $PATTERN, ...)
+
+  # ============================================================================
+  # UNSAFE REFLECTION
+  # ============================================================================
+
+  - id: csharp-unsafe-reflection
+    languages: [csharp]
+    message: "Unsafe reflection with user input can lead to code execution."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-470: Unsafe Reflection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              Type.GetType($USER_INPUT)
+          - pattern: |
+              Assembly.Load($USER_INPUT)
+          - pattern: |
+              Assembly.LoadFrom($USER_INPUT)
+          - pattern: |
+              Activator.CreateInstance($USER_INPUT)
+          - pattern: |
+              $TYPE.InvokeMember($USER_INPUT, ...)
+
+  # ============================================================================
+  # FILE UPLOAD VULNERABILITIES
+  # ============================================================================
+
+  - id: csharp-unrestricted-file-upload
+    languages: [csharp]
+    message: "Validate file extensions and content types for uploads."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-434: Unrestricted Upload of File with Dangerous Type"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $FILE.SaveAs($PATH)
+          - pattern: |
+              File.WriteAllBytes($PATH, $FILE.InputStream)
+          - pattern: |
+              $FILE.CopyTo($STREAM)
+
+  # ============================================================================
+  # HARDCODED IP/URLS
+  # ============================================================================
+
+  - id: csharp-hardcoded-ip
+    languages: [csharp]
+    message: "Hardcoded IP address detected. Use configuration instead."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-547: Use of Hard-coded Security-relevant Constants"
+    patterns:
+      - pattern-regex: '"(\d{1,3}\.){3}\d{1,3}"'
+
+  # ============================================================================
+  # MISSING AUTHORIZATION
+  # ============================================================================
+
+  - id: csharp-missing-authorization
+    languages: [csharp]
+    message: "Controller missing [Authorize] attribute. Ensure proper authorization."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-862: Missing Authorization"
+      owasp: "A01:2021 - Broken Access Control"
+    pattern: |
+      public class $CONTROLLER : Controller {
+        ...
+      }
+    pattern-not: |
+      [Authorize]
+      public class $CONTROLLER : Controller {
+        ...
+      }
+
+  # ============================================================================
+  # WEAK HASHING FOR PASSWORDS
+  # ============================================================================
+
+  - id: csharp-weak-password-hash
+    languages: [csharp]
+    message: "Weak hashing for passwords. Use BCrypt, Argon2, or PBKDF2."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-916: Use of Password Hash With Insufficient Computational Effort"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              MD5.Create().ComputeHash($PASSWORD)
+          - pattern: |
+              SHA1.Create().ComputeHash($PASSWORD)
+          - pattern: |
+              SHA256.Create().ComputeHash($PASSWORD)
+          - pattern: |
+              new MD5CryptoServiceProvider().ComputeHash($PASSWORD)
+          - pattern: |
+              new SHA1CryptoServiceProvider().ComputeHash($PASSWORD)
+
+  # ============================================================================
+  # INSECURE HTTP METHODS
+  # ============================================================================
+
+  - id: csharp-http-verb-tampering
+    languages: [csharp]
+    message: "Action accepts all HTTP methods. Restrict with [HttpGet], [HttpPost], etc."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-650: Trusting HTTP Permission Methods on the Server Side"
+    pattern: |
+      public $RETURN_TYPE $METHOD(...) {
+        ...
+      }
+    pattern-not-inside: |
+      [Http$VERB]
+      public $RETURN_TYPE $METHOD(...) { ... }
+
+  # ============================================================================
+  # NULL DEREFERENCE
+  # ============================================================================
+
+  - id: csharp-null-dereference
+    languages: [csharp]
+    message: "Potential null dereference. Add null check before accessing member."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-476: NULL Pointer Dereference"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $OBJ = $DB.Find(...);
+              $OBJ.$MEMBER;
+          - pattern: |
+              $OBJ = $COLLECTION.FirstOrDefault(...);
+              $OBJ.$MEMBER;
+
+  # ============================================================================
+  # XPATH INJECTION
+  # ============================================================================
+
+  - id: csharp-xpath-injection
+    languages: [csharp]
+    message: "Potential XPath injection. Use parameterized XPath queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-643: XPath Injection"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $DOC.SelectNodes($XPATH + $USER_INPUT)
+          - pattern: |
+              $DOC.SelectNodes($"...{$VAR}...")
+          - pattern: |
+              $DOC.SelectSingleNode($XPATH + $USER_INPUT)
+          - pattern: |
+              $DOC.SelectSingleNode($"...{$VAR}...")
+          - pattern: |
+              $NAV.Select($XPATH + $USER_INPUT)
+
+  # ============================================================================
+  # VIEWSTATE TAMPERING
+  # ============================================================================
+
+  - id: csharp-viewstate-mac-disabled
+    languages: [csharp]
+    message: "ViewState MAC validation disabled. This allows tampering."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-642: External Control of Critical State Data"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              EnableViewStateMac = false
+          - pattern: |
+              <pages enableViewStateMac="false" />
+
+  # ============================================================================
+  # HEADER INJECTION
+  # ============================================================================
+
+  - id: csharp-header-injection
+    languages: [csharp]
+    message: "Potential HTTP header injection. Sanitize user input in headers."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-113: HTTP Response Splitting"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              Response.AddHeader($NAME, $USER_INPUT)
+          - pattern: |
+              Response.Headers.Add($NAME, $USER_INPUT)
+          - pattern: |
+              Response.Headers[$NAME] = $USER_INPUT
+
+  # ============================================================================
+  # INSECURE CORS
+  # ============================================================================
+
+  - id: csharp-cors-allow-all
+    languages: [csharp]
+    message: "CORS allows all origins. Restrict to trusted domains."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-942: Overly Permissive Cross-domain Whitelist"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              policy.AllowAnyOrigin()
+          - pattern: |
+              .WithOrigins("*")
+          - pattern: |
+              Access-Control-Allow-Origin: *
+
+  # ============================================================================
+  # CRYPTOGRAPHIC ISSUES
+  # ============================================================================
+
+  - id: csharp-ecb-mode
+    languages: [csharp]
+    message: "ECB mode is insecure. Use CBC or GCM mode instead."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CRYPTO.Mode = CipherMode.ECB;
+          - pattern: |
+              new AesManaged { Mode = CipherMode.ECB }
+          - pattern: |
+              new AesCryptoServiceProvider { Mode = CipherMode.ECB }
+
+  - id: csharp-hardcoded-iv
+    languages: [csharp]
+    message: "Hardcoded initialization vector (IV). Generate random IV for each encryption."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-329: Not Using an Unpredictable IV with CBC Mode"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CRYPTO.IV = new byte[] { ... };
+          - pattern: |
+              $CRYPTO.IV = Encoding.$ENC.GetBytes("...");
+
+  # ============================================================================
+  # SENSITIVE DATA EXPOSURE
+  # ============================================================================
+
+  - id: csharp-sensitive-data-in-url
+    languages: [csharp]
+    message: "Sensitive data in URL query string. Use POST body or headers instead."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-598: Information Exposure Through Query Strings"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $URL + "?password=" + $VAR
+          - pattern: |
+              $URL + "?token=" + $VAR
+          - pattern: |
+              $URL + "?api_key=" + $VAR
+          - pattern: |
+              $"...?password={$VAR}..."
+          - pattern: |
+              $"...?token={$VAR}..."
+
+  # ============================================================================
+  # RACE CONDITIONS
+  # ============================================================================
+
+  - id: csharp-toctou-race-condition
+    languages: [csharp]
+    message: "Potential TOCTOU race condition. Check and use atomically."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-367: Time-of-check Time-of-use Race Condition"
+    patterns:
+      - pattern: |
+          if (File.Exists($PATH)) {
+            ...
+            File.$OP($PATH, ...);
+            ...
+          }
