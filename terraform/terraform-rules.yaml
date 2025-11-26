@@ -1,0 +1,1708 @@
+rules:
+  # ============================================================================
+  # HARDCODED CREDENTIALS - PASSWORDS
+  # ============================================================================
+
+  - id: terraform-hardcoded-password
+    languages: [hcl]
+    message: "Hardcoded password detected. Use variables or secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: password = "..."
+          - pattern: PASSWORD = "..."
+          - pattern: admin_password = "..."
+          - pattern: master_password = "..."
+          - pattern: db_password = "..."
+          - pattern: database_password = "..."
+          - pattern: user_password = "..."
+          - pattern: root_password = "..."
+          - pattern: administrator_password = "..."
+          - pattern: login_password = "..."
+          - pattern: service_password = "..."
+          - pattern: cluster_password = "..."
+          - pattern: replication_password = "..."
+          - pattern: initial_password = "..."
+          - pattern: default_password = "..."
+
+  - id: terraform-hardcoded-password-regex
+    languages: [hcl]
+    message: "Hardcoded password in attribute. Use variables or secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)(password|passwd|pwd)\s*=\s*"[^"${}]+"'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - SECRETS
+  # ============================================================================
+
+  - id: terraform-hardcoded-secret
+    languages: [hcl]
+    message: "Hardcoded secret detected. Use secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: secret = "..."
+          - pattern: SECRET = "..."
+          - pattern: secret_key = "..."
+          - pattern: secret_id = "..."
+          - pattern: client_secret = "..."
+          - pattern: app_secret = "..."
+          - pattern: application_secret = "..."
+          - pattern: shared_secret = "..."
+          - pattern: signing_secret = "..."
+          - pattern: webhook_secret = "..."
+          - pattern: encryption_secret = "..."
+
+  - id: terraform-hardcoded-secret-regex
+    languages: [hcl]
+    message: "Hardcoded secret in attribute. Use secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)secret\s*=\s*"[^"${}]+"'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - API KEYS
+  # ============================================================================
+
+  - id: terraform-hardcoded-api-key
+    languages: [hcl]
+    message: "Hardcoded API key detected. Use variables or secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: api_key = "..."
+          - pattern: API_KEY = "..."
+          - pattern: apikey = "..."
+          - pattern: api_secret = "..."
+          - pattern: api_token = "..."
+          - pattern: apiSecret = "..."
+          - pattern: apiToken = "..."
+
+  - id: terraform-hardcoded-api-key-regex
+    languages: [hcl]
+    message: "Hardcoded API key in attribute. Use variables or secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)api[_-]?key\s*=\s*"[^"${}]+"'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - ACCESS KEYS
+  # ============================================================================
+
+  - id: terraform-hardcoded-access-key
+    languages: [hcl]
+    message: "Hardcoded access key detected. Use IAM roles or environment variables."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: access_key = "..."
+          - pattern: ACCESS_KEY = "..."
+          - pattern: access_key_id = "..."
+          - pattern: secret_access_key = "..."
+          - pattern: aws_access_key_id = "..."
+          - pattern: aws_secret_access_key = "..."
+          - pattern: subscription_key = "..."
+
+  - id: terraform-hardcoded-aws-access-key
+    languages: [hcl]
+    message: "Potential AWS access key detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '["'']AKIA[0-9A-Z]{16}["'']'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - PRIVATE KEYS
+  # ============================================================================
+
+  - id: terraform-hardcoded-private-key
+    languages: [hcl]
+    message: "Hardcoded private key detected. Use secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: private_key = "..."
+          - pattern: PRIVATE_KEY = "..."
+          - pattern: private_key_pem = "..."
+          - pattern: ssh_private_key = "..."
+          - pattern: tls_private_key = "..."
+          - pattern: rsa_private_key = "..."
+          - pattern: ssl_private_key = "..."
+
+  - id: terraform-hardcoded-private-key-pem
+    languages: [hcl]
+    message: "PEM private key detected in code."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'
+
+  - id: terraform-hardcoded-public-key-embedded
+    languages: [hcl]
+    message: "Embedded public key detected. Consider using key management."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '-----BEGIN (RSA |EC |DSA |OPENSSH )?PUBLIC KEY-----'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - TOKENS
+  # ============================================================================
+
+  - id: terraform-hardcoded-token
+    languages: [hcl]
+    message: "Hardcoded token detected. Use variables or secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: token = "..."
+          - pattern: TOKEN = "..."
+          - pattern: auth_token = "..."
+          - pattern: access_token = "..."
+          - pattern: bearer_token = "..."
+          - pattern: oauth_token = "..."
+          - pattern: refresh_token = "..."
+          - pattern: api_token = "..."
+          - pattern: personal_access_token = "..."
+          - pattern: service_token = "..."
+          - pattern: session_token = "..."
+          - pattern: jwt_token = "..."
+          - pattern: github_token = "..."
+          - pattern: gitlab_token = "..."
+          - pattern: slack_token = "..."
+          - pattern: bot_token = "..."
+
+  - id: terraform-hardcoded-bearer-token
+    languages: [hcl]
+    message: "Hardcoded bearer token detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)bearer\s+[a-zA-Z0-9_\-\.]+[a-zA-Z0-9]'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - CONNECTION STRINGS
+  # ============================================================================
+
+  - id: terraform-hardcoded-connection-string
+    languages: [hcl]
+    message: "Hardcoded connection string detected. Use secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: connection_string = "..."
+          - pattern: conn_string = "..."
+          - pattern: database_url = "..."
+          - pattern: jdbc_url = "..."
+          - pattern: db_connection_string = "..."
+          - pattern: mongodb_uri = "..."
+          - pattern: redis_url = "..."
+          - pattern: amqp_url = "..."
+          - pattern: storage_connection_string = "..."
+
+  - id: terraform-hardcoded-connection-string-password
+    languages: [hcl]
+    message: "Connection string with embedded password detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)(mysql|postgres|postgresql|mongodb|redis|amqp)://[^:]+:[^@]+@'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - CERTIFICATES
+  # ============================================================================
+
+  - id: terraform-hardcoded-certificate
+    languages: [hcl]
+    message: "Hardcoded certificate detected. Use certificate manager."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: certificate = "..."
+          - pattern: certificate_body = "..."
+          - pattern: certificate_pem = "..."
+          - pattern: ssl_certificate = "..."
+          - pattern: tls_certificate = "..."
+          - pattern: client_certificate = "..."
+          - pattern: server_certificate = "..."
+
+  - id: terraform-hardcoded-certificate-pem
+    languages: [hcl]
+    message: "PEM certificate detected in code."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '-----BEGIN CERTIFICATE-----'
+
+  # ============================================================================
+  # HARDCODED CREDENTIALS - MISCELLANEOUS
+  # ============================================================================
+
+  - id: terraform-hardcoded-credentials
+    languages: [hcl]
+    message: "Hardcoded credentials detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: credentials = "..."
+          - pattern: auth_credentials = "..."
+          - pattern: login_credentials = "..."
+
+  - id: terraform-hardcoded-username
+    languages: [hcl]
+    message: "Hardcoded username detected. Consider using variables."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: username = "..."
+          - pattern: admin_username = "..."
+          - pattern: db_username = "..."
+          - pattern: login = "..."
+
+  - id: terraform-hardcoded-encryption-key
+    languages: [hcl]
+    message: "Hardcoded encryption key detected. Use key management service."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: encryption_key = "..."
+          - pattern: master_key = "..."
+          - pattern: data_key = "..."
+          - pattern: key_material = "..."
+          - pattern: symmetric_key = "..."
+
+  - id: terraform-hardcoded-passphrase
+    languages: [hcl]
+    message: "Hardcoded passphrase detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: passphrase = "..."
+          - pattern: key_passphrase = "..."
+          - pattern: ssh_passphrase = "..."
+
+  - id: terraform-hardcoded-salt
+    languages: [hcl]
+    message: "Hardcoded salt detected. Generate dynamically."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: salt = "..."
+          - pattern: password_salt = "..."
+
+  - id: terraform-hardcoded-pin
+    languages: [hcl]
+    message: "Hardcoded PIN detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: pin = "..."
+          - pattern: pin_code = "..."
+          - pattern: security_pin = "..."
+
+  # ============================================================================
+  # SENSITIVE VARIABLES
+  # ============================================================================
+
+  - id: terraform-sensitive-variable-with-default
+    languages: [hcl]
+    message: "Sensitive variable should not have default value."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern: |
+      variable "$NAME" {
+        ...
+        sensitive = true
+        ...
+        default = "..."
+        ...
+      }
+
+  - id: terraform-password-variable-not-sensitive
+    languages: [hcl]
+    message: "Password variable should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'variable\s+"[^"]*password[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  - id: terraform-secret-variable-not-sensitive
+    languages: [hcl]
+    message: "Secret variable should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'variable\s+"[^"]*secret[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  - id: terraform-key-variable-not-sensitive
+    languages: [hcl]
+    message: "Key variable should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'variable\s+"[^"]*(api_key|private_key|secret_key|access_key)[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  - id: terraform-token-variable-not-sensitive
+    languages: [hcl]
+    message: "Token variable should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'variable\s+"[^"]*token[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  - id: terraform-credentials-variable-not-sensitive
+    languages: [hcl]
+    message: "Credentials variable should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'variable\s+"[^"]*credential[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  # ============================================================================
+  # INSECURE PROTOCOLS - HTTP
+  # ============================================================================
+
+  - id: terraform-http-url
+    languages: [hcl]
+    message: "HTTP URL detected. Use HTTPS for secure communication."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '=\s*"http://[^"]*"'
+
+  - id: terraform-http-endpoint
+    languages: [hcl]
+    message: "HTTP endpoint detected. Use HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    patterns:
+      - pattern-either:
+          - pattern: endpoint = "http://..."
+          - pattern: url = "http://..."
+          - pattern: uri = "http://..."
+          - pattern: host = "http://..."
+          - pattern: address = "http://..."
+          - pattern: server = "http://..."
+
+  - id: terraform-http-webhook
+    languages: [hcl]
+    message: "HTTP webhook URL detected. Use HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    patterns:
+      - pattern-either:
+          - pattern: webhook_url = "http://..."
+          - pattern: callback_url = "http://..."
+          - pattern: notification_url = "http://..."
+
+  # ============================================================================
+  # INSECURE PROTOCOLS - OTHER
+  # ============================================================================
+
+  - id: terraform-git-protocol
+    languages: [hcl]
+    message: "Git protocol is insecure. Use HTTPS or SSH."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: 'source\s*=\s*"git://'
+
+  - id: terraform-ftp-protocol
+    languages: [hcl]
+    message: "FTP protocol is insecure. Use SFTP or HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '"ftp://[^"]*"'
+
+  - id: terraform-telnet-protocol
+    languages: [hcl]
+    message: "Telnet protocol is insecure. Use SSH."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '"telnet://[^"]*"'
+
+  - id: terraform-ldap-protocol
+    languages: [hcl]
+    message: "LDAP protocol is insecure. Use LDAPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '"ldap://[^"]*"'
+
+  - id: terraform-smtp-no-tls
+    languages: [hcl]
+    message: "SMTP without TLS detected. Use SMTPS or STARTTLS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '"smtp://[^"]*"'
+
+  # ============================================================================
+  # PROVISIONERS
+  # ============================================================================
+
+  - id: terraform-local-exec-provisioner
+    languages: [hcl]
+    message: "local-exec provisioner can execute arbitrary commands. Review carefully."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern: |
+      provisioner "local-exec" {
+        ...
+      }
+
+  - id: terraform-remote-exec-provisioner
+    languages: [hcl]
+    message: "remote-exec provisioner can execute arbitrary commands. Review carefully."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern: |
+      provisioner "remote-exec" {
+        ...
+      }
+
+  - id: terraform-file-provisioner
+    languages: [hcl]
+    message: "file provisioner transfers files. Ensure no secrets in files."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern: |
+      provisioner "file" {
+        ...
+      }
+
+  - id: terraform-provisioner-on-failure-continue
+    languages: [hcl]
+    message: "Provisioner continues on failure. May leave resources in inconsistent state."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-755: Improper Handling of Exceptional Conditions"
+    pattern: |
+      provisioner $TYPE {
+        ...
+        on_failure = continue
+        ...
+      }
+
+  - id: terraform-provisioner-connection-password
+    languages: [hcl]
+    message: "Provisioner connection using password. Use SSH keys instead."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+    pattern: |
+      connection {
+        ...
+        type = "ssh"
+        ...
+        password = $PASS
+        ...
+      }
+
+  - id: terraform-provisioner-connection-insecure
+    languages: [hcl]
+    message: "Provisioner connection with insecure settings."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    pattern: |
+      connection {
+        ...
+        insecure = true
+        ...
+      }
+
+  # ============================================================================
+  # DATA SOURCES
+  # ============================================================================
+
+  - id: terraform-external-data-source
+    languages: [hcl]
+    message: "External data source executes local commands. Validate input/output."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern: |
+      data "external" $NAME {
+        ...
+      }
+
+  - id: terraform-http-data-source-insecure
+    languages: [hcl]
+    message: "HTTP data source using insecure HTTP. Use HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern: |
+      data "http" $NAME {
+        url = "http://..."
+        ...
+      }
+
+  - id: terraform-http-data-source-no-ca
+    languages: [hcl]
+    message: "HTTP data source without CA certificate verification."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    pattern: |
+      data "http" $NAME {
+        ...
+        insecure = true
+        ...
+      }
+
+  - id: terraform-template-file-secrets
+    languages: [hcl]
+    message: "Template file may contain secrets. Use sensitive variables."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern: |
+      data "template_file" $NAME {
+        ...
+        vars = {
+          ...
+          password = $VAR
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # BACKEND & STATE SECURITY
+  # ============================================================================
+
+  - id: terraform-backend-s3-no-encryption
+    languages: [hcl]
+    message: "S3 backend should enable encryption."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+    pattern: |
+      backend "s3" {
+        ...
+      }
+    pattern-not: |
+      backend "s3" {
+        ...
+        encrypt = true
+        ...
+      }
+
+  - id: terraform-backend-s3-no-dynamodb
+    languages: [hcl]
+    message: "S3 backend without DynamoDB locking. Enable for state locking."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-667: Improper Locking"
+    pattern: |
+      backend "s3" {
+        ...
+      }
+    pattern-not: |
+      backend "s3" {
+        ...
+        dynamodb_table = $TABLE
+        ...
+      }
+
+  - id: terraform-backend-gcs-no-encryption
+    languages: [hcl]
+    message: "GCS backend should use encryption key."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+    pattern: |
+      backend "gcs" {
+        ...
+      }
+    pattern-not: |
+      backend "gcs" {
+        ...
+        encryption_key = $KEY
+        ...
+      }
+
+  - id: terraform-backend-http-insecure
+    languages: [hcl]
+    message: "HTTP backend should use HTTPS."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern: |
+      backend "http" {
+        address = "http://..."
+        ...
+      }
+
+  - id: terraform-backend-local
+    languages: [hcl]
+    message: "Local backend stores state locally. Use remote backend for teams."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-922: Insecure Storage of Sensitive Information"
+    pattern: |
+      backend "local" {
+        ...
+      }
+
+  - id: terraform-backend-consul-no-tls
+    languages: [hcl]
+    message: "Consul backend should use TLS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern: |
+      backend "consul" {
+        ...
+      }
+    pattern-not: |
+      backend "consul" {
+        ...
+        scheme = "https"
+        ...
+      }
+
+  - id: terraform-backend-etcd-no-tls
+    languages: [hcl]
+    message: "Etcd backend should use TLS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern: |
+      backend "etcdv3" {
+        ...
+      }
+    pattern-not: |
+      backend "etcdv3" {
+        ...
+        cacert_path = $CERT
+        ...
+      }
+
+  - id: terraform-backend-pg-no-ssl
+    languages: [hcl]
+    message: "PostgreSQL backend should use SSL."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: 'backend\s+"pg"\s*\{[^}]*conn_str\s*=\s*"(?!.*sslmode)[^"]*"'
+
+  # ============================================================================
+  # MODULES
+  # ============================================================================
+
+  - id: terraform-module-no-version
+    languages: [hcl]
+    message: "Module source without version constraint. Pin to specific version."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern: |
+      module $NAME {
+        source = $SOURCE
+        ...
+      }
+    pattern-not: |
+      module $NAME {
+        source = $SOURCE
+        version = $VERSION
+        ...
+      }
+
+  - id: terraform-module-http-source
+    languages: [hcl]
+    message: "Module source using HTTP. Use HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern: |
+      module $NAME {
+        source = "http://..."
+        ...
+      }
+
+  - id: terraform-module-git-no-ref
+    languages: [hcl]
+    message: "Git module source without ref. Pin to specific commit or tag."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern-regex: 'module\s+"[^"]+"\s*\{[^}]*source\s*=\s*"git::[^"]*(?!\?ref=)[^"]*"'
+
+  - id: terraform-module-github-no-ref
+    languages: [hcl]
+    message: "GitHub module source without ref. Pin to specific commit or tag."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern-regex: 'module\s+"[^"]+"\s*\{[^}]*source\s*=\s*"github\.com[^"]*(?!\?ref=)[^"]*"'
+
+  # ============================================================================
+  # PROVIDERS
+  # ============================================================================
+
+  - id: terraform-provider-no-version
+    languages: [hcl]
+    message: "Provider without version constraint. Pin to specific version."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern: |
+      provider $NAME {
+        ...
+      }
+
+  - id: terraform-required-providers-missing-version
+    languages: [hcl]
+    message: "Required provider without version constraint."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern: |
+      required_providers {
+        $PROVIDER = {
+          source = $SOURCE
+        }
+      }
+    pattern-not: |
+      required_providers {
+        $PROVIDER = {
+          source = $SOURCE
+          version = $VERSION
+        }
+      }
+
+  - id: terraform-provider-insecure-skip-verify
+    languages: [hcl]
+    message: "Provider skipping TLS verification. Vulnerable to MITM."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    patterns:
+      - pattern-either:
+          - pattern: insecure = true
+          - pattern: skip_ssl_verification = true
+          - pattern: skip_tls_verify = true
+          - pattern: insecure_skip_verify = true
+          - pattern: ssl_verify = false
+          - pattern: tls_verify = false
+          - pattern: verify_ssl = false
+
+  # ============================================================================
+  # TERRAFORM SETTINGS
+  # ============================================================================
+
+  - id: terraform-version-not-pinned
+    languages: [hcl]
+    message: "Terraform version not pinned. Pin to specific version."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern: |
+      terraform {
+        ...
+      }
+    pattern-not: |
+      terraform {
+        ...
+        required_version = $VERSION
+        ...
+      }
+
+  - id: terraform-experiments-enabled
+    languages: [hcl]
+    message: "Experimental features enabled. May be unstable."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-710: Improper Adherence to Coding Standards"
+    pattern: |
+      terraform {
+        experiments = [...]
+      }
+
+  # ============================================================================
+  # OUTPUT SECURITY
+  # ============================================================================
+
+  - id: terraform-output-password-not-sensitive
+    languages: [hcl]
+    message: "Password output should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'output\s+"[^"]*password[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  - id: terraform-output-token-not-sensitive
+    languages: [hcl]
+    message: "Token output should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'output\s+"[^"]*token[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  - id: terraform-output-secret-not-sensitive
+    languages: [hcl]
+    message: "Secret output should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'output\s+"[^"]*secret[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  - id: terraform-output-key-not-sensitive
+    languages: [hcl]
+    message: "Key output should be marked sensitive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: 'output\s+"[^"]*(api_key|private_key|secret_key|access_key)[^"]*"\s*\{(?:(?!sensitive\s*=\s*true)[^}])*\}'
+
+  # ============================================================================
+  # LOCAL VALUES
+  # ============================================================================
+
+  - id: terraform-local-hardcoded-secret
+    languages: [hcl]
+    message: "Local value contains hardcoded secret."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: 'locals\s*\{[^}]*(password|secret|api_key|token|credential)\s*=\s*"[^"${}]+"'
+
+  # ============================================================================
+  # NULL RESOURCE
+  # ============================================================================
+
+  - id: terraform-null-resource-provisioner
+    languages: [hcl]
+    message: "null_resource with provisioner. Ensure secure command execution."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern: |
+      resource "null_resource" $NAME {
+        ...
+        provisioner $TYPE {
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # RANDOM RESOURCES
+  # ============================================================================
+
+  - id: terraform-random-password-short
+    languages: [hcl]
+    message: "Random password length may be too short. Use at least 16 characters."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-521: Weak Password Requirements"
+    pattern-regex: 'resource\s+"random_password"[^{]*\{[^}]*length\s*=\s*([1-9]|1[0-5])\s'
+
+  - id: terraform-random-password-no-special
+    languages: [hcl]
+    message: "Random password should include special characters."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-521: Weak Password Requirements"
+    pattern: |
+      resource "random_password" $NAME {
+        ...
+        special = false
+        ...
+      }
+
+  - id: terraform-random-password-no-upper
+    languages: [hcl]
+    message: "Random password should include uppercase characters."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-521: Weak Password Requirements"
+    pattern: |
+      resource "random_password" $NAME {
+        ...
+        upper = false
+        ...
+      }
+
+  - id: terraform-random-password-no-lower
+    languages: [hcl]
+    message: "Random password should include lowercase characters."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-521: Weak Password Requirements"
+    pattern: |
+      resource "random_password" $NAME {
+        ...
+        lower = false
+        ...
+      }
+
+  - id: terraform-random-password-no-number
+    languages: [hcl]
+    message: "Random password should include numbers."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-521: Weak Password Requirements"
+    pattern: |
+      resource "random_password" $NAME {
+        ...
+        numeric = false
+        ...
+      }
+
+  - id: terraform-random-string-for-password
+    languages: [hcl]
+    message: "Use random_password instead of random_string for passwords."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern: |
+      resource "random_string" $NAME {
+        ...
+      }
+
+  # ============================================================================
+  # TLS RESOURCES
+  # ============================================================================
+
+  - id: terraform-tls-private-key-rsa-2048
+    languages: [hcl]
+    message: "RSA key should be at least 4096 bits for security."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+    pattern: |
+      resource "tls_private_key" $NAME {
+        ...
+        algorithm = "RSA"
+        rsa_bits = 2048
+        ...
+      }
+
+  - id: terraform-tls-private-key-rsa-1024
+    languages: [hcl]
+    message: "RSA 1024-bit key is insecure. Use at least 4096 bits."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+    pattern: |
+      resource "tls_private_key" $NAME {
+        ...
+        algorithm = "RSA"
+        rsa_bits = 1024
+        ...
+      }
+
+  - id: terraform-tls-self-signed-cert
+    languages: [hcl]
+    message: "Self-signed certificate. Use CA-signed certificates in production."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    pattern: |
+      resource "tls_self_signed_cert" $NAME {
+        ...
+      }
+
+  # ============================================================================
+  # GENERAL SECURITY PATTERNS
+  # ============================================================================
+
+  - id: terraform-debug-enabled
+    languages: [hcl]
+    message: "Debug mode enabled. Disable in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+    patterns:
+      - pattern-either:
+          - pattern: debug = true
+          - pattern: debug_mode = true
+          - pattern: enable_debug = true
+          - pattern: verbose = true
+
+  - id: terraform-logging-disabled
+    languages: [hcl]
+    message: "Logging disabled. Enable for audit trail."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+    patterns:
+      - pattern-either:
+          - pattern: logging = false
+          - pattern: enable_logging = false
+          - pattern: access_logging = false
+          - pattern: audit_logging = false
+
+  - id: terraform-encryption-disabled
+    languages: [hcl]
+    message: "Encryption explicitly disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+    patterns:
+      - pattern-either:
+          - pattern: encrypted = false
+          - pattern: encryption = false
+          - pattern: enable_encryption = false
+          - pattern: encrypt = false
+          - pattern: encryption_enabled = false
+          - pattern: storage_encrypted = false
+          - pattern: at_rest_encryption_enabled = false
+          - pattern: transit_encryption_enabled = false
+          - pattern: kms_encrypted = false
+
+  - id: terraform-ssl-disabled
+    languages: [hcl]
+    message: "SSL/TLS explicitly disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    patterns:
+      - pattern-either:
+          - pattern: ssl = false
+          - pattern: ssl_enabled = false
+          - pattern: enable_ssl = false
+          - pattern: require_ssl = false
+          - pattern: tls = false
+          - pattern: tls_enabled = false
+          - pattern: enable_tls = false
+          - pattern: https_only = false
+          - pattern: enforce_https = false
+
+  - id: terraform-public-access-enabled
+    languages: [hcl]
+    message: "Public access explicitly enabled. Verify this is intended."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: public = true
+          - pattern: publicly_accessible = true
+          - pattern: public_access = true
+          - pattern: public_network_access_enabled = true
+          - pattern: enable_public_access = true
+          - pattern: allow_public_access = true
+
+  - id: terraform-anonymous-access
+    languages: [hcl]
+    message: "Anonymous access enabled. Verify this is intended."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: anonymous = true
+          - pattern: allow_anonymous = true
+          - pattern: anonymous_access = true
+          - pattern: enable_anonymous = true
+
+  - id: terraform-auth-disabled
+    languages: [hcl]
+    message: "Authentication disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-306: Missing Authentication"
+    patterns:
+      - pattern-either:
+          - pattern: authentication = false
+          - pattern: auth_enabled = false
+          - pattern: enable_auth = false
+          - pattern: require_authentication = false
+          - pattern: authentication_enabled = false
+
+  - id: terraform-authorization-disabled
+    languages: [hcl]
+    message: "Authorization disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-862: Missing Authorization"
+    patterns:
+      - pattern-either:
+          - pattern: authorization = false
+          - pattern: authorization_enabled = false
+          - pattern: enable_authorization = false
+          - pattern: rbac_enabled = false
+          - pattern: role_based_access_control_enabled = false
+
+  - id: terraform-mfa-disabled
+    languages: [hcl]
+    message: "MFA/2FA disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-308: Use of Single-factor Authentication"
+    patterns:
+      - pattern-either:
+          - pattern: mfa = false
+          - pattern: mfa_enabled = false
+          - pattern: enable_mfa = false
+          - pattern: require_mfa = false
+          - pattern: two_factor = false
+          - pattern: two_factor_enabled = false
+
+  - id: terraform-deletion-protection-disabled
+    languages: [hcl]
+    message: "Deletion protection disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    patterns:
+      - pattern-either:
+          - pattern: deletion_protection = false
+          - pattern: deletion_protection_enabled = false
+          - pattern: enable_deletion_protection = false
+          - pattern: prevent_destroy = false
+          - pattern: termination_protection = false
+
+  - id: terraform-backup-disabled
+    languages: [hcl]
+    message: "Backup disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    patterns:
+      - pattern-either:
+          - pattern: backup = false
+          - pattern: backup_enabled = false
+          - pattern: enable_backup = false
+          - pattern: automated_backup = false
+          - pattern: backup_retention_period = 0
+
+  - id: terraform-versioning-disabled
+    languages: [hcl]
+    message: "Versioning disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    patterns:
+      - pattern-either:
+          - pattern: versioning = false
+          - pattern: versioning_enabled = false
+          - pattern: enable_versioning = false
+          - pattern: version_enabled = false
+
+  - id: terraform-monitoring-disabled
+    languages: [hcl]
+    message: "Monitoring disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+    patterns:
+      - pattern-either:
+          - pattern: monitoring = false
+          - pattern: monitoring_enabled = false
+          - pattern: enable_monitoring = false
+          - pattern: detailed_monitoring = false
+
+  - id: terraform-waf-disabled
+    languages: [hcl]
+    message: "WAF protection disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    patterns:
+      - pattern-either:
+          - pattern: waf_enabled = false
+          - pattern: enable_waf = false
+          - pattern: web_application_firewall = false
+
+  - id: terraform-ddos-protection-disabled
+    languages: [hcl]
+    message: "DDoS protection disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    patterns:
+      - pattern-either:
+          - pattern: ddos_protection = false
+          - pattern: ddos_protection_enabled = false
+          - pattern: enable_ddos_protection = false
+
+  # ============================================================================
+  # NETWORK SECURITY PATTERNS
+  # ============================================================================
+
+  - id: terraform-open-cidr-ingress
+    languages: [hcl]
+    message: "Open CIDR block (0.0.0.0/0) in ingress rule."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: cidr_blocks = ["0.0.0.0/0"]
+          - pattern: cidr_block = "0.0.0.0/0"
+          - pattern: source_address_prefix = "*"
+          - pattern: source_address_prefixes = ["*"]
+          - pattern: source_ranges = ["0.0.0.0/0"]
+
+  - id: terraform-open-ipv6-cidr
+    languages: [hcl]
+    message: "Open IPv6 CIDR block (::/0) detected."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: ipv6_cidr_blocks = ["::/0"]
+          - pattern: ipv6_cidr_block = "::/0"
+
+  - id: terraform-all-ports-open
+    languages: [hcl]
+    message: "All ports open (0-65535). Restrict to required ports."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              from_port = 0
+              to_port = 65535
+          - pattern: |
+              from_port = 0
+              to_port = 0
+          - pattern: port_range = "*"
+          - pattern: destination_port_range = "*"
+
+  - id: terraform-all-protocols-allowed
+    languages: [hcl]
+    message: "All protocols allowed. Restrict to required protocols."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: protocol = "-1"
+          - pattern: protocol = "all"
+          - pattern: protocol = "*"
+
+  # ============================================================================
+  # IAM/RBAC PATTERNS
+  # ============================================================================
+
+  - id: terraform-admin-access
+    languages: [hcl]
+    message: "Admin/root access granted. Follow least privilege."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    patterns:
+      - pattern-either:
+          - pattern: actions = ["*"]
+          - pattern: permissions = ["*"]
+          - pattern: '"Action": "*"'
+          - pattern: '"Action": ["*"]'
+          - pattern: role = "admin"
+          - pattern: role = "owner"
+          - pattern: role = "root"
+
+  - id: terraform-wildcard-resource
+    languages: [hcl]
+    message: "Wildcard resource access. Scope to specific resources."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    patterns:
+      - pattern-either:
+          - pattern: resources = ["*"]
+          - pattern: '"Resource": "*"'
+          - pattern: '"Resource": ["*"]'
+
+  - id: terraform-all-users-access
+    languages: [hcl]
+    message: "Access granted to all users. Restrict to specific principals."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: principal = "*"
+          - pattern: principals = ["*"]
+          - pattern: '"Principal": "*"'
+          - pattern: member = "allUsers"
+          - pattern: member = "allAuthenticatedUsers"
+          - pattern: members = [..., "allUsers", ...]
+
+  # ============================================================================
+  # CONTAINER/POD SECURITY PATTERNS
+  # ============================================================================
+
+  - id: terraform-privileged-container
+    languages: [hcl]
+    message: "Privileged container. Avoid if possible."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    patterns:
+      - pattern-either:
+          - pattern: privileged = true
+          - pattern: '"privileged": true'
+          - pattern: '"privileged":true'
+
+  - id: terraform-root-user-container
+    languages: [hcl]
+    message: "Container running as root. Use non-root user."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    patterns:
+      - pattern-either:
+          - pattern: run_as_user = 0
+          - pattern: user = "root"
+          - pattern: '"user": "root"'
+          - pattern: '"user": "0"'
+
+  - id: terraform-run-as-non-root-false
+    languages: [hcl]
+    message: "Container not enforcing non-root user."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern: run_as_non_root = false
+
+  - id: terraform-host-network
+    languages: [hcl]
+    message: "Container using host network namespace."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern: host_network = true
+
+  - id: terraform-host-pid
+    languages: [hcl]
+    message: "Container using host PID namespace."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern: host_pid = true
+
+  - id: terraform-host-ipc
+    languages: [hcl]
+    message: "Container using host IPC namespace."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern: host_ipc = true
+
+  - id: terraform-read-only-root-filesystem-false
+    languages: [hcl]
+    message: "Container root filesystem not read-only."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-732: Incorrect Permission Assignment"
+    pattern: read_only_root_filesystem = false
+
+  - id: terraform-privilege-escalation
+    languages: [hcl]
+    message: "Container allows privilege escalation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern: allow_privilege_escalation = true
+
+  - id: terraform-sys-admin-capability
+    languages: [hcl]
+    message: "Container has SYS_ADMIN capability."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern-regex: '(capabilities|add)\s*=\s*\[.*"SYS_ADMIN".*\]'
+
+  - id: terraform-all-capabilities
+    languages: [hcl]
+    message: "Container has ALL capabilities."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern-regex: '(capabilities|add)\s*=\s*\[.*"ALL".*\]'
+
+  - id: terraform-latest-image-tag
+    languages: [hcl]
+    message: "Container using 'latest' tag. Pin to specific version."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern-regex: 'image\s*=\s*"[^"]+:latest"'
+
+  - id: terraform-no-image-tag
+    languages: [hcl]
+    message: "Container image without tag defaults to 'latest'."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern-regex: 'image\s*=\s*"[^":]+"\s*$'
+
+  # ============================================================================
+  # COMPLIANCE & TAGGING
+  # ============================================================================
+
+  - id: terraform-missing-tags
+    languages: [hcl]
+    message: "Resource missing tags. Add for compliance and cost tracking."
+    severity: INFO
+    metadata:
+      category: compliance
+      cwe: "CWE-710: Improper Adherence to Coding Standards"
+    pattern: |
+      resource $TYPE $NAME {
+        ...
+      }
+    pattern-not: |
+      resource $TYPE $NAME {
+        ...
+        tags = {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-missing-description
+    languages: [hcl]
+    message: "Resource missing description."
+    severity: INFO
+    metadata:
+      category: compliance
+      cwe: "CWE-710: Improper Adherence to Coding Standards"
+    patterns:
+      - pattern-either:
+          - pattern: description = ""
+          - pattern: description = null
+
+  # ============================================================================
+  # LIFECYCLE RULES
+  # ============================================================================
+
+  - id: terraform-ignore-changes-all
+    languages: [hcl]
+    message: "Ignoring all changes may cause drift."
+    severity: INFO
+    metadata:
+      category: compliance
+      cwe: "CWE-710: Improper Adherence to Coding Standards"
+    pattern: |
+      lifecycle {
+        ignore_changes = all
+      }
+
+  - id: terraform-prevent-destroy-false
+    languages: [hcl]
+    message: "prevent_destroy set to false. Resource can be accidentally deleted."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern: |
+      lifecycle {
+        prevent_destroy = false
+      }
+
+  # ============================================================================
+  # COMMENTS & DOCUMENTATION
+  # ============================================================================
+
+  - id: terraform-todo-comment
+    languages: [hcl]
+    message: "TODO comment found. Address before production."
+    severity: INFO
+    metadata:
+      category: compliance
+      cwe: "CWE-710: Improper Adherence to Coding Standards"
+    pattern-regex: '#.*(TODO|FIXME|XXX|HACK|BUG)'
+
+  - id: terraform-hardcoded-ip
+    languages: [hcl]
+    message: "Hardcoded IP address. Consider using variables."
+    severity: INFO
+    metadata:
+      category: compliance
+      cwe: "CWE-547: Use of Hard-coded Security-relevant Constants"
+    pattern-regex: '=\s*"(\d{1,3}\.){3}\d{1,3}"'
+
+  # ============================================================================
+  # FILE PERMISSIONS
+  # ============================================================================
+
+  - id: terraform-insecure-file-permissions
+    languages: [hcl]
+    message: "Insecure file permissions (world-readable/writable)."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-732: Incorrect Permission Assignment"
+    patterns:
+      - pattern-either:
+          - pattern: file_permission = "0777"
+          - pattern: file_permission = "0666"
+          - pattern: directory_permission = "0777"
+          - pattern: permissions = "0777"
+
+  - id: terraform-local-file-sensitive
+    languages: [hcl]
+    message: "local_file may contain sensitive data. Use local_sensitive_file."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern: |
+      resource "local_file" $NAME {
+        ...
+        content = $CONTENT
+        ...
+      }
