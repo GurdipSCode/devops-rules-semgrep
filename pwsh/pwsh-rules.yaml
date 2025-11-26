@@ -1,0 +1,1660 @@
+rules:
+  # ============================================================================
+  # COMMAND INJECTION - INVOKE-EXPRESSION
+  # ============================================================================
+
+  - id: powershell-invoke-expression
+    languages: [generic]
+    message: "Invoke-Expression can execute arbitrary code. Avoid with user input."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    patterns:
+      - pattern-either:
+          - pattern: Invoke-Expression $EXPR
+          - pattern: Invoke-Expression($EXPR)
+          - pattern: iex $EXPR
+          - pattern: iex($EXPR)
+          - pattern: IEX $EXPR
+          - pattern: IEX($EXPR)
+
+  - id: powershell-invoke-expression-variable
+    languages: [generic]
+    message: "Invoke-Expression with variable input is dangerous."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)(invoke-expression|iex)\s*[\(\s]*\$\w+'
+
+  - id: powershell-invoke-expression-download
+    languages: [generic]
+    message: "Download and execute pattern detected. Common malware technique."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)(invoke-expression|iex).*\((new-object|invoke-webrequest|invoke-restmethod|wget|curl|iwr)'
+
+  # ============================================================================
+  # COMMAND INJECTION - CALL OPERATOR
+  # ============================================================================
+
+  - id: powershell-call-operator-variable
+    languages: [generic]
+    message: "Call operator (&) with variable can execute arbitrary commands."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '&\s*\$\w+'
+
+  - id: powershell-dot-sourcing-variable
+    languages: [generic]
+    message: "Dot-sourcing with variable input can execute arbitrary scripts."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '\.\s+\$\w+'
+
+  # ============================================================================
+  # COMMAND INJECTION - START-PROCESS
+  # ============================================================================
+
+  - id: powershell-start-process-cmd
+    languages: [generic]
+    message: "Start-Process with cmd.exe can be used for command injection."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)start-process\s+(-filepath\s+)?["'']?(cmd|cmd\.exe|powershell|powershell\.exe)'
+
+  - id: powershell-start-process-hidden
+    languages: [generic]
+    message: "Start-Process with hidden window. Often used by malware."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)start-process.*-windowstyle\s+(hidden|0)'
+
+  - id: powershell-start-process-bypass
+    languages: [generic]
+    message: "Start-Process with execution policy bypass."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)start-process.*-executionpolicy\s+bypass'
+
+  # ============================================================================
+  # CREDENTIAL HANDLING - PLAINTEXT PASSWORDS
+  # ============================================================================
+
+  - id: powershell-plaintext-password
+    languages: [generic]
+    message: "Plaintext password detected. Use SecureString or credential manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)\$password\s*=\s*["''][^"'']+["'']'
+
+  - id: powershell-plaintext-credential
+    languages: [generic]
+    message: "Plaintext credential detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)\$(cred|credential|passwd|pwd|secret|apikey|api_key|token)\s*=\s*["''][^"''$]+["'']'
+
+  - id: powershell-convertto-securestring-plaintext
+    languages: [generic]
+    message: "ConvertTo-SecureString with -AsPlainText exposes password in script."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-312: Cleartext Storage of Sensitive Information"
+    pattern-regex: '(?i)convertto-securestring.*-asplaintext'
+
+  - id: powershell-pscredential-plaintext
+    languages: [generic]
+    message: "PSCredential created with plaintext password."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-312: Cleartext Storage of Sensitive Information"
+    pattern-regex: '(?i)new-object\s+(-typename\s+)?system\.management\.automation\.pscredential'
+
+  - id: powershell-get-credential-stored
+    languages: [generic]
+    message: "Credentials stored in variable. Ensure proper handling."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)\$\w+\s*=\s*get-credential'
+
+  # ============================================================================
+  # CREDENTIAL HANDLING - HARDCODED SECRETS
+  # ============================================================================
+
+  - id: powershell-hardcoded-api-key
+    languages: [generic]
+    message: "Hardcoded API key detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)\$(api_?key|apikey)\s*=\s*["''][^"''$]+["'']'
+
+  - id: powershell-hardcoded-token
+    languages: [generic]
+    message: "Hardcoded token detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)\$(token|auth_?token|access_?token|bearer_?token)\s*=\s*["''][^"''$]+["'']'
+
+  - id: powershell-hardcoded-connection-string
+    languages: [generic]
+    message: "Hardcoded connection string with credentials."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)(connection_?string|connstring|conn_str)\s*=\s*["''][^"'']*password\s*='
+
+  - id: powershell-hardcoded-aws-key
+    languages: [generic]
+    message: "Potential AWS access key detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '["'']AKIA[0-9A-Z]{16}["'']'
+
+  - id: powershell-hardcoded-private-key
+    languages: [generic]
+    message: "Private key detected in script."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'
+
+  # ============================================================================
+  # REMOTE EXECUTION
+  # ============================================================================
+
+  - id: powershell-invoke-command-remote
+    languages: [generic]
+    message: "Remote command execution via Invoke-Command."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)invoke-command\s+(-computername|-cn|-session)'
+
+  - id: powershell-enter-pssession
+    languages: [generic]
+    message: "Interactive remote session initiated."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)enter-pssession'
+
+  - id: powershell-new-pssession
+    languages: [generic]
+    message: "Remote PowerShell session created."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)new-pssession'
+
+  - id: powershell-winrm-enable
+    languages: [generic]
+    message: "WinRM being enabled or configured."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(enable-psremoting|winrm\s+quickconfig|set-wsmanquickconfig)'
+
+  - id: powershell-winrm-trustedhosts
+    languages: [generic]
+    message: "WinRM TrustedHosts being modified. Security risk."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)set-item\s+wsman:\\localhost\\client\\trustedhosts'
+
+  # ============================================================================
+  # DOWNLOAD AND EXECUTE
+  # ============================================================================
+
+  - id: powershell-webclient-downloadstring
+    languages: [generic]
+    message: "WebClient DownloadString can download malicious content."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-494: Download of Code Without Integrity Check"
+    pattern-regex: '(?i)\(new-object\s+(system\.)?net\.webclient\)\.downloadstring'
+
+  - id: powershell-webclient-downloadfile
+    languages: [generic]
+    message: "WebClient DownloadFile detected."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-494: Download of Code Without Integrity Check"
+    pattern-regex: '(?i)\(new-object\s+(system\.)?net\.webclient\)\.downloadfile'
+
+  - id: powershell-invoke-webrequest
+    languages: [generic]
+    message: "Invoke-WebRequest downloading content."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-494: Download of Code Without Integrity Check"
+    pattern-regex: '(?i)(invoke-webrequest|iwr|wget|curl)\s+'
+
+  - id: powershell-invoke-restmethod
+    languages: [generic]
+    message: "Invoke-RestMethod making HTTP request."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-494: Download of Code Without Integrity Check"
+    pattern-regex: '(?i)invoke-restmethod'
+
+  - id: powershell-bits-transfer
+    languages: [generic]
+    message: "BITS transfer detected. Can be used for stealthy downloads."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-494: Download of Code Without Integrity Check"
+    pattern-regex: '(?i)start-bitstransfer'
+
+  - id: powershell-download-execute-pattern
+    languages: [generic]
+    message: "Download and execute pattern. Common malware technique."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-494: Download of Code Without Integrity Check"
+    pattern-regex: '(?i)(downloadstring|downloadfile|invoke-webrequest|iwr).*\|\s*(invoke-expression|iex|&)'
+
+  # ============================================================================
+  # INSECURE PROTOCOLS
+  # ============================================================================
+
+  - id: powershell-http-url
+    languages: [generic]
+    message: "HTTP URL detected. Use HTTPS for secure communication."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '["'']http://[^"'']*["'']'
+
+  - id: powershell-ftp-url
+    languages: [generic]
+    message: "FTP URL detected. Use SFTP or HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '["'']ftp://[^"'']*["'']'
+
+  - id: powershell-telnet
+    languages: [generic]
+    message: "Telnet usage detected. Use SSH instead."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: '(?i)telnet\s+'
+
+  # ============================================================================
+  # CERTIFICATE VALIDATION BYPASS
+  # ============================================================================
+
+  - id: powershell-ssl-bypass-callback
+    languages: [generic]
+    message: "SSL certificate validation bypassed. Vulnerable to MITM."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    pattern-regex: '(?i)\[system\.net\.servicepointmanager\]::servercertificatevalidationcallback'
+
+  - id: powershell-ssl-bypass-policy
+    languages: [generic]
+    message: "SSL certificate policy bypassed."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    pattern-regex: '(?i)add-type.*trustallcertspolicy'
+
+  - id: powershell-skip-certificate-check
+    languages: [generic]
+    message: "Certificate check skipped."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    pattern-regex: '(?i)-skipcertificatecheck'
+
+  - id: powershell-ssl-protocols-insecure
+    languages: [generic]
+    message: "Insecure SSL/TLS protocol specified."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+    pattern-regex: '(?i)securityprotocol.*=.*(ssl3|tls$|tls10|tls11)'
+
+  # ============================================================================
+  # EXECUTION POLICY BYPASS
+  # ============================================================================
+
+  - id: powershell-execution-policy-bypass
+    languages: [generic]
+    message: "Execution policy bypass detected."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)-executionpolicy\s+(bypass|unrestricted)'
+
+  - id: powershell-set-execution-policy
+    languages: [generic]
+    message: "Execution policy being modified."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)set-executionpolicy\s+(bypass|unrestricted|remotesigned)'
+
+  - id: powershell-execution-policy-scope
+    languages: [generic]
+    message: "Execution policy modified with scope."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)set-executionpolicy.*-scope\s+(process|currentuser|localmachine)'
+
+  # ============================================================================
+  # ENCODING AND OBFUSCATION
+  # ============================================================================
+
+  - id: powershell-encoded-command
+    languages: [generic]
+    message: "Encoded command detected. Often used for obfuscation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)-e(nc|ncodedcommand)?\s+[A-Za-z0-9+/=]{20,}'
+
+  - id: powershell-base64-decode
+    languages: [generic]
+    message: "Base64 decoding detected. May be obfuscation."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)\[system\.convert\]::frombase64string'
+
+  - id: powershell-base64-decode-text
+    languages: [generic]
+    message: "Base64 text decoding detected."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)\[system\.text\.encoding\]::utf8\.getstring.*frombase64string'
+
+  - id: powershell-gzip-decompress
+    languages: [generic]
+    message: "Gzip decompression detected. May be obfuscation."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)system\.io\.compression\.gzipstream'
+
+  - id: powershell-deflate-decompress
+    languages: [generic]
+    message: "Deflate decompression detected. May be obfuscation."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)system\.io\.compression\.deflatestream'
+
+  - id: powershell-string-format-obfuscation
+    languages: [generic]
+    message: "String format obfuscation pattern detected."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)-f\s*["''][^"'']*["''](\s*,\s*["''][^"'']*["''])+'
+
+  - id: powershell-char-array-obfuscation
+    languages: [generic]
+    message: "Character array obfuscation pattern detected."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)\[char\]\s*\d+.*-join'
+
+  - id: powershell-replace-obfuscation
+    languages: [generic]
+    message: "Multiple replace operations. May be obfuscation."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-116: Improper Encoding"
+    pattern-regex: '(?i)(-replace\s*["''][^"'']*["'']\s*,\s*["''][^"'']*["'']\s*){2,}'
+
+  # ============================================================================
+  # AMSI BYPASS
+  # ============================================================================
+
+  - id: powershell-amsi-bypass-reflection
+    languages: [generic]
+    message: "AMSI bypass attempt via reflection."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)system\.management\.automation\.amsi'
+
+  - id: powershell-amsi-bypass-patch
+    languages: [generic]
+    message: "AMSI bypass attempt via memory patching."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)amsicontext|amsiinitfailed|amsiscanbuffer'
+
+  - id: powershell-amsi-utils
+    languages: [generic]
+    message: "AMSI utilities being accessed. Potential bypass."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)amsiutils'
+
+  # ============================================================================
+  # SCRIPT BLOCK LOGGING BYPASS
+  # ============================================================================
+
+  - id: powershell-scriptblock-logging-bypass
+    languages: [generic]
+    message: "Script block logging bypass attempt."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+    pattern-regex: '(?i)scriptblocklogging|enablescriptblocklogging'
+
+  - id: powershell-logging-disable
+    languages: [generic]
+    message: "PowerShell logging being disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+    pattern-regex: '(?i)(module|script|transcription)logging.*\$false'
+
+  # ============================================================================
+  # CONSTRAINED LANGUAGE MODE BYPASS
+  # ============================================================================
+
+  - id: powershell-clm-bypass
+    languages: [generic]
+    message: "Constrained Language Mode bypass attempt."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)languagemode|fulllanguage|constrainedlanguage'
+
+  - id: powershell-applocker-bypass
+    languages: [generic]
+    message: "AppLocker bypass technique detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)__pslocktaken|lockdownpolicy'
+
+  # ============================================================================
+  # REGISTRY MANIPULATION
+  # ============================================================================
+
+  - id: powershell-registry-run-key
+    languages: [generic]
+    message: "Registry Run key modification. Used for persistence."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(hklm|hkcu):\\\\software\\\\microsoft\\\\windows\\\\currentversion\\\\run'
+
+  - id: powershell-registry-autorun
+    languages: [generic]
+    message: "Autorun registry key modification."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)currentversion\\\\(run|runonce|runonceex|runservices)'
+
+  - id: powershell-registry-sam
+    languages: [generic]
+    message: "SAM registry hive access. Credential theft risk."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)hklm:\\\\sam'
+
+  - id: powershell-registry-security
+    languages: [generic]
+    message: "Security registry hive access."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)hklm:\\\\security'
+
+  - id: powershell-registry-lsa
+    languages: [generic]
+    message: "LSA registry key access. Potential credential theft."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)system\\\\currentcontrolset\\\\control\\\\lsa'
+
+  - id: powershell-set-itemproperty-registry
+    languages: [generic]
+    message: "Registry modification via Set-ItemProperty."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)set-itemproperty\s+(-path\s+)?["'']?(hklm|hkcu|hkcr|hku):'
+
+  - id: powershell-new-itemproperty-registry
+    languages: [generic]
+    message: "Registry key creation."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)new-itemproperty\s+(-path\s+)?["'']?(hklm|hkcu|hkcr|hku):'
+
+  # ============================================================================
+  # SCHEDULED TASKS
+  # ============================================================================
+
+  - id: powershell-scheduled-task-create
+    languages: [generic]
+    message: "Scheduled task creation. Used for persistence."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(new-scheduledtask|register-scheduledtask|schtasks\s+/create)'
+
+  - id: powershell-scheduled-task-modify
+    languages: [generic]
+    message: "Scheduled task modification."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(set-scheduledtask|schtasks\s+/change)'
+
+  - id: powershell-scheduled-task-system
+    languages: [generic]
+    message: "Scheduled task running as SYSTEM."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern-regex: '(?i)(new-scheduledtask|register-scheduledtask).*(-user\s+[''"]?system|nt authority\\\\system)'
+
+  # ============================================================================
+  # SERVICE MANIPULATION
+  # ============================================================================
+
+  - id: powershell-service-create
+    languages: [generic]
+    message: "Service creation. Can be used for persistence."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(new-service|sc\.exe\s+create)'
+
+  - id: powershell-service-modify
+    languages: [generic]
+    message: "Service modification."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)set-service'
+
+  - id: powershell-service-start-type
+    languages: [generic]
+    message: "Service start type modification."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)set-service.*-startuptype'
+
+  - id: powershell-service-binpath
+    languages: [generic]
+    message: "Service binary path modification. Potential hijacking."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)sc\.exe\s+(config|create).*binpath'
+
+  # ============================================================================
+  # EVENT LOG MANIPULATION
+  # ============================================================================
+
+  - id: powershell-eventlog-clear
+    languages: [generic]
+    message: "Event log clearing. Anti-forensics technique."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+    pattern-regex: '(?i)(clear-eventlog|wevtutil\s+cl|remove-eventlog)'
+
+  - id: powershell-eventlog-disable
+    languages: [generic]
+    message: "Event log being disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+    pattern-regex: '(?i)(limit-eventlog|wevtutil\s+sl.*\/e:false)'
+
+  - id: powershell-security-eventlog-clear
+    languages: [generic]
+    message: "Security event log clearing. Critical anti-forensics."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+    pattern-regex: '(?i)(clear-eventlog|wevtutil\s+cl)\s+["'']?security'
+
+  # ============================================================================
+  # FIREWALL MANIPULATION
+  # ============================================================================
+
+  - id: powershell-firewall-disable
+    languages: [generic]
+    message: "Firewall being disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(set-netfirewallprofile|netsh\s+advfirewall).*(-enabled\s+false|state\s+off)'
+
+  - id: powershell-firewall-rule-add
+    languages: [generic]
+    message: "Firewall rule being added."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(new-netfirewallrule|netsh\s+advfirewall\s+firewall\s+add)'
+
+  - id: powershell-firewall-rule-allow-all
+    languages: [generic]
+    message: "Firewall rule allowing all traffic."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)new-netfirewallrule.*-action\s+allow.*-remoteaddress\s+any'
+
+  # ============================================================================
+  # USER AND GROUP MANIPULATION
+  # ============================================================================
+
+  - id: powershell-user-create
+    languages: [generic]
+    message: "Local user creation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(new-localuser|net\s+user\s+\w+.*\/add)'
+
+  - id: powershell-user-admin
+    languages: [generic]
+    message: "User being added to Administrators group."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern-regex: '(?i)(add-localgroupmember.*administrators|net\s+localgroup\s+administrators.*\/add)'
+
+  - id: powershell-user-password-change
+    languages: [generic]
+    message: "User password being changed."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(set-localuser.*-password|net\s+user.*\*)'
+
+  - id: powershell-user-enable
+    languages: [generic]
+    message: "User account being enabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(enable-localuser|net\s+user.*\/active:yes)'
+
+  - id: powershell-hidden-user
+    languages: [generic]
+    message: "Hidden user account creation ($ suffix)."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(new-localuser|net\s+user)\s+["'']?\w+\$'
+
+  # ============================================================================
+  # CREDENTIAL DUMPING
+  # ============================================================================
+
+  - id: powershell-mimikatz
+    languages: [generic]
+    message: "Mimikatz-related pattern detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)(invoke-mimikatz|sekurlsa|kerberos::list|lsadump)'
+
+  - id: powershell-procdump-lsass
+    languages: [generic]
+    message: "LSASS process dumping. Credential theft technique."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)(procdump|minidump|comsvcs).*lsass'
+
+  - id: powershell-sam-dump
+    languages: [generic]
+    message: "SAM database dump attempt."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)(reg\s+save.*sam|copy.*\\\\sam)'
+
+  - id: powershell-ntds-dump
+    languages: [generic]
+    message: "NTDS.dit dump attempt. Domain credential theft."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)(ntds\.dit|ntdsutil|secretsdump)'
+
+  - id: powershell-dpapi
+    languages: [generic]
+    message: "DPAPI operations detected. Potential credential access."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)(unprotect-cmsmessage|dpapi|cryptunprotectdata)'
+
+  # ============================================================================
+  # WMI/CIM
+  # ============================================================================
+
+  - id: powershell-wmi-process-create
+    languages: [generic]
+    message: "WMI process creation. Can be used for lateral movement."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)(invoke-wmimethod|invoke-cimmethod).*win32_process.*create'
+
+  - id: powershell-wmi-remote
+    languages: [generic]
+    message: "Remote WMI execution."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)(get-wmiobject|get-ciminstance|invoke-wmimethod).*-computername'
+
+  - id: powershell-wmi-subscription
+    languages: [generic]
+    message: "WMI event subscription. Persistence technique."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(set-wmiinstance|new-ciminstance).*__eventfilter'
+
+  - id: powershell-wmi-consumer
+    languages: [generic]
+    message: "WMI event consumer. Persistence technique."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(commandlineeventconsumer|activescripteventconsumer)'
+
+  # ============================================================================
+  # COM OBJECTS
+  # ============================================================================
+
+  - id: powershell-com-shell
+    languages: [generic]
+    message: "COM Shell.Application object. Can execute commands."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)new-object\s+(-comobject\s+)?shell\.application'
+
+  - id: powershell-com-wscript
+    languages: [generic]
+    message: "WScript.Shell COM object. Can execute commands."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)new-object\s+(-comobject\s+)?wscript\.shell'
+
+  - id: powershell-com-schedule
+    languages: [generic]
+    message: "Schedule.Service COM object. Persistence technique."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)new-object\s+(-comobject\s+)?schedule\.service'
+
+  - id: powershell-com-mmc
+    languages: [generic]
+    message: "MMC COM object. Potential for privilege escalation."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)new-object\s+(-comobject\s+)?mmc'
+
+  # ============================================================================
+  # REFLECTION AND ASSEMBLY
+  # ============================================================================
+
+  - id: powershell-reflection-assembly
+    languages: [generic]
+    message: "Reflection Assembly loading. Can load malicious code."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)\[reflection\.assembly\]::load'
+
+  - id: powershell-add-type-csharp
+    languages: [generic]
+    message: "Add-Type compiling C# code. Can introduce vulnerabilities."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)add-type.*-typedefinition'
+
+  - id: powershell-add-type-dll
+    languages: [generic]
+    message: "Add-Type loading DLL."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)add-type\s+-path'
+
+  - id: powershell-pinvoke
+    languages: [generic]
+    message: "P/Invoke detected. Native code execution."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)\[dllimport'
+
+  - id: powershell-unsafe-code
+    languages: [generic]
+    message: "Unsafe code compilation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)compileroptions.*\/unsafe'
+
+  # ============================================================================
+  # NETWORK OPERATIONS
+  # ============================================================================
+
+  - id: powershell-tcp-listener
+    languages: [generic]
+    message: "TCP listener creation. Potential backdoor."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)system\.net\.sockets\.tcplistener'
+
+  - id: powershell-tcp-client
+    languages: [generic]
+    message: "TCP client connection."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)new-object\s+system\.net\.sockets\.tcpclient'
+
+  - id: powershell-udp-client
+    languages: [generic]
+    message: "UDP client usage."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)system\.net\.sockets\.udpclient'
+
+  - id: powershell-socket-raw
+    languages: [generic]
+    message: "Raw socket creation. Low-level network access."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)sockettype.*raw|protocoltype.*raw'
+
+  - id: powershell-dns-txt-query
+    languages: [generic]
+    message: "DNS TXT query. Can be used for C2 communication."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)resolve-dnsname.*-type\s+txt'
+
+  - id: powershell-reverse-shell
+    languages: [generic]
+    message: "Reverse shell pattern detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern-regex: '(?i)(tcpclient|socket).*getstream.*streamreader.*streamwriter'
+
+  # ============================================================================
+  # FILE SYSTEM OPERATIONS
+  # ============================================================================
+
+  - id: powershell-alternate-data-stream
+    languages: [generic]
+    message: "Alternate Data Stream access. Used for hiding data."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(get-content|set-content|add-content).*-stream'
+
+  - id: powershell-hidden-file
+    languages: [generic]
+    message: "Hidden file attribute being set."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(attrib\s+\+h|set-itemattribute.*hidden)'
+
+  - id: powershell-system-file
+    languages: [generic]
+    message: "System file attribute being set."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)attrib\s+\+s'
+
+  - id: powershell-file-delete-force
+    languages: [generic]
+    message: "Forced file deletion."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)remove-item.*-force.*-recurse'
+
+  - id: powershell-sensitive-path-access
+    languages: [generic]
+    message: "Access to sensitive system path."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(\\\\windows\\\\system32|\\\\windows\\\\syswow64|\\\\programdata)'
+
+  # ============================================================================
+  # ACTIVE DIRECTORY
+  # ============================================================================
+
+  - id: powershell-ad-user-enum
+    languages: [generic]
+    message: "Active Directory user enumeration."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(get-aduser|get-adgroupmember|dsquery\s+user)'
+
+  - id: powershell-ad-computer-enum
+    languages: [generic]
+    message: "Active Directory computer enumeration."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(get-adcomputer|dsquery\s+computer)'
+
+  - id: powershell-ad-group-modify
+    languages: [generic]
+    message: "Active Directory group modification."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(add-adgroupmember|remove-adgroupmember)'
+
+  - id: powershell-ad-password-policy
+    languages: [generic]
+    message: "Active Directory password policy query."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)get-addefaultdomainpasswordpolicy'
+
+  - id: powershell-ad-spn-enum
+    languages: [generic]
+    message: "SPN enumeration. Kerberoasting preparation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(get-aduser.*serviceprincipalname|setspn)'
+
+  - id: powershell-kerberoast
+    languages: [generic]
+    message: "Kerberoasting technique detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)(invoke-kerberoast|request-spnticket|rubeus)'
+
+  # ============================================================================
+  # PROCESS MANIPULATION
+  # ============================================================================
+
+  - id: powershell-process-injection
+    languages: [generic]
+    message: "Process injection technique detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)(virtualallocex|writeprocessmemory|createremotethread|ntcreatethreadex)'
+
+  - id: powershell-process-hollowing
+    languages: [generic]
+    message: "Process hollowing technique detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)(zwunmapviewofsection|ntunmapviewofsection)'
+
+  - id: powershell-process-handle
+    languages: [generic]
+    message: "Process handle manipulation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)(openprocess|getmodulehandle|getprocaddress)'
+
+  - id: powershell-process-suspend
+    languages: [generic]
+    message: "Process suspension. Anti-debugging or injection prep."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern-regex: '(?i)(suspend-process|ntsuspendprocess)'
+
+  # ============================================================================
+  # EVASION TECHNIQUES
+  # ============================================================================
+
+  - id: powershell-sleep-evasion
+    languages: [generic]
+    message: "Long sleep delay. Sandbox evasion technique."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)start-sleep\s+(-seconds?\s+)?\d{3,}'
+
+  - id: powershell-environment-check
+    languages: [generic]
+    message: "Environment check. VM/Sandbox detection."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)(win32_computersystem|vmware|virtualbox|sandbox|qemu)'
+
+  - id: powershell-debugger-check
+    languages: [generic]
+    message: "Debugger detection attempt."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)(isdebuggerpresent|checkremotedebuggerpresent)'
+
+  - id: powershell-antivirus-check
+    languages: [generic]
+    message: "Antivirus detection query."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)(antivirusproduct|get-mpcomputerstatus|defender)'
+
+  # ============================================================================
+  # CRYPTOGRAPHY
+  # ============================================================================
+
+  - id: powershell-weak-hash-md5
+    languages: [generic]
+    message: "MD5 hash algorithm. Cryptographically weak."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    pattern-regex: '(?i)(md5cryptoserviceprovider|md5\.create|get-filehash.*-algorithm\s+md5)'
+
+  - id: powershell-weak-hash-sha1
+    languages: [generic]
+    message: "SHA1 hash algorithm. Cryptographically weak."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    pattern-regex: '(?i)(sha1cryptoserviceprovider|sha1\.create|get-filehash.*-algorithm\s+sha1)'
+
+  - id: powershell-weak-encryption-des
+    languages: [generic]
+    message: "DES encryption. Cryptographically weak."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    pattern-regex: '(?i)(descryptoserviceprovider|des\.create)'
+
+  - id: powershell-weak-encryption-rc2
+    languages: [generic]
+    message: "RC2 encryption. Cryptographically weak."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    pattern-regex: '(?i)(rc2cryptoserviceprovider|rc2\.create)'
+
+  - id: powershell-hardcoded-key
+    languages: [generic]
+    message: "Hardcoded encryption key."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-321: Use of Hard-coded Cryptographic Key"
+    pattern-regex: '(?i)\$(key|iv|aeskey|encryptionkey)\s*=\s*\[byte\[\]\]'
+
+  # ============================================================================
+  # SQL OPERATIONS
+  # ============================================================================
+
+  - id: powershell-sql-injection
+    languages: [generic]
+    message: "Potential SQL injection. Use parameterized queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+    pattern-regex: '(?i)(invoke-sqlcmd|\.commandtext)\s*=.*\$\w+'
+
+  - id: powershell-sql-connection-plaintext
+    languages: [generic]
+    message: "SQL connection with plaintext credentials."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-312: Cleartext Storage of Sensitive Information"
+    pattern-regex: '(?i)connectionstring.*password\s*='
+
+  - id: powershell-invoke-sqlcmd
+    languages: [generic]
+    message: "SQL command execution."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+    pattern-regex: '(?i)invoke-sqlcmd'
+
+  # ============================================================================
+  # WINDOWS DEFENDER
+  # ============================================================================
+
+  - id: powershell-defender-exclusion
+    languages: [generic]
+    message: "Windows Defender exclusion being added."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)(add-mppreference|set-mppreference).*-exclusion'
+
+  - id: powershell-defender-disable
+    languages: [generic]
+    message: "Windows Defender being disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)set-mppreference.*-disablerealtimemonitoring\s+\$true'
+
+  - id: powershell-defender-disable-scanning
+    languages: [generic]
+    message: "Windows Defender scanning being disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)set-mppreference.*-disable(ioavprotection|scriptscanning|behaviormonitoring)\s+\$true'
+
+  # ============================================================================
+  # UAC BYPASS
+  # ============================================================================
+
+  - id: powershell-uac-bypass
+    languages: [generic]
+    message: "UAC bypass technique detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern-regex: '(?i)(fodhelper|computerdefaults|sdclt|eventvwr).*ms-settings'
+
+  - id: powershell-uac-registry
+    languages: [generic]
+    message: "UAC registry key modification."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+    pattern-regex: '(?i)software\\\\classes\\\\ms-settings\\\\shell\\\\open\\\\command'
+
+  # ============================================================================
+  # POWERSHELL SPECIFIC DANGERS
+  # ============================================================================
+
+  - id: powershell-noprofile
+    languages: [generic]
+    message: "PowerShell running without profile. Evasion technique."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)-noprofile|-nop\s'
+
+  - id: powershell-noninteractive
+    languages: [generic]
+    message: "PowerShell running non-interactively."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)-noninteractive|-noni\s'
+
+  - id: powershell-windowstyle-hidden
+    languages: [generic]
+    message: "PowerShell window hidden."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)-windowstyle\s+(hidden|0)'
+
+  - id: powershell-sta-thread
+    languages: [generic]
+    message: "PowerShell STA thread. May be required for COM objects."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+    pattern-regex: '(?i)-sta\s'
+
+  # ============================================================================
+  # LDAP OPERATIONS
+  # ============================================================================
+
+  - id: powershell-ldap-injection
+    languages: [generic]
+    message: "Potential LDAP injection. Sanitize input."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-90: LDAP Injection"
+    pattern-regex: '(?i)(adssearcher|directoryentry|directoryservices).*\$\w+'
+
+  - id: powershell-ldap-anonymous
+    languages: [generic]
+    message: "Anonymous LDAP binding."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+    pattern-regex: '(?i)directoryentry.*\$null\s*,\s*\$null'
+
+  # ============================================================================
+  # SHAREPOINT OPERATIONS
+  # ============================================================================
+
+  - id: powershell-sharepoint-credential
+    languages: [generic]
+    message: "SharePoint credentials in script."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)(sharepointonlinecredential|connect-pnponline).*password'
+
+  # ============================================================================
+  # AZURE/CLOUD
+  # ============================================================================
+
+  - id: powershell-azure-credential
+    languages: [generic]
+    message: "Azure credentials in script."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern-regex: '(?i)(connect-azaccount|connect-azuread).*-credential'
+
+  - id: powershell-azure-token
+    languages: [generic]
+    message: "Azure token handling."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-522: Insufficiently Protected Credentials"
+    pattern-regex: '(?i)get-azaccesstoken'
+
+  # ============================================================================
+  # DANGEROUS CMDLETS
+  # ============================================================================
+
+  - id: powershell-format-volume
+    languages: [generic]
+    message: "Volume formatting. Destructive operation."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)format-volume'
+
+  - id: powershell-clear-disk
+    languages: [generic]
+    message: "Disk clearing. Destructive operation."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)clear-disk'
+
+  - id: powershell-stop-computer
+    languages: [generic]
+    message: "Computer shutdown command."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(stop-computer|shutdown)'
+
+  - id: powershell-restart-computer
+    languages: [generic]
+    message: "Computer restart command."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)restart-computer'
+
+  # ============================================================================
+  # CLIPBOARD
+  # ============================================================================
+
+  - id: powershell-clipboard-get
+    languages: [generic]
+    message: "Clipboard data access. Data theft technique."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(get-clipboard|\[windows\.forms\.clipboard\]::gettext)'
+
+  - id: powershell-clipboard-set
+    languages: [generic]
+    message: "Clipboard data modification."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    pattern-regex: '(?i)(set-clipboard|\[windows\.forms\.clipboard\]::settext)'
+
+  # ============================================================================
+  # KEYLOGGING
+  # ============================================================================
+
+  - id: powershell-keylogger
+    languages: [generic]
+    message: "Potential keylogger. GetAsyncKeyState usage."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)getasynckeystate'
+
+  - id: powershell-keyboard-hook
+    languages: [generic]
+    message: "Keyboard hook. Potential keylogger."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(setwindowshookex|wh_keyboard)'
+
+  # ============================================================================
+  # SCREENSHOT
+  # ============================================================================
+
+  - id: powershell-screenshot
+    languages: [generic]
+    message: "Screenshot capture detected."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(copyfromscreen|system\.drawing\.graphics|bitblt)'
+
+  # ============================================================================
+  # WEBCAM/AUDIO
+  # ============================================================================
+
+  - id: powershell-webcam
+    languages: [generic]
+    message: "Webcam access detected."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(videocapture|directshow|webcam)'
+
+  - id: powershell-audio-record
+    languages: [generic]
+    message: "Audio recording detected."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(waveform|naudio|soundrecorder)'
+
+  # ============================================================================
+  # DATA EXFILTRATION
+  # ============================================================================
+
+  - id: powershell-email-exfil
+    languages: [generic]
+    message: "Email sending. Potential data exfiltration."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)(send-mailmessage|smtpclient\.send)'
+
+  - id: powershell-dns-exfil
+    languages: [generic]
+    message: "DNS-based data exfiltration pattern."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern-regex: '(?i)resolve-dnsname.*\$\w+\.'
+
+  # ============================================================================
+  # BEST PRACTICES
+  # ============================================================================
+
+  - id: powershell-todo-fixme
+    languages: [generic]
+    message: "TODO/FIXME comment found. Address before production."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '#.*(TODO|FIXME|XXX|HACK|BUG)'
+
+  - id: powershell-write-host
+    languages: [generic]
+    message: "Write-Host used. Use Write-Output for pipeline compatibility."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '(?i)write-host\s+'
+
+  - id: powershell-backtick-continuation
+    languages: [generic]
+    message: "Backtick line continuation. Can be fragile."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '`\s*$'
+
+  - id: powershell-alias-usage
+    languages: [generic]
+    message: "Cmdlet alias used. Use full cmdlet names for clarity."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '(?<!\w)(gci|ls|dir|gc|cat|type|sc|sl|cd|cp|copy|mv|move|rm|del|erase|cls|clear|ps|kill|man|help|where|select|foreach|sort|measure|group|diff|compare)\s+'
+
+  - id: powershell-positional-params
+    languages: [generic]
+    message: "Consider using named parameters for clarity."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '(?i)(get-content|set-content|copy-item|move-item|remove-item)\s+[^-]'
+
+  - id: powershell-error-action-silently
+    languages: [generic]
+    message: "Errors being silently continued. May hide issues."
+    severity: WARNING
+    metadata:
+      category: best-practice
+    pattern-regex: '(?i)-erroraction\s+(silentlycontinue|ignore|0)'
+
+  - id: powershell-global-variable
+    languages: [generic]
+    message: "Global variable usage. Consider script scope."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '\$global:\w+'
+
+  - id: powershell-invoke-command-scriptblock
+    languages: [generic]
+    message: "Invoke-Command with ScriptBlock. Ensure proper variable handling."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '(?i)invoke-command.*-scriptblock'
