@@ -1,0 +1,1747 @@
+rules:
+  # ============================================================================
+  # SQL INJECTION
+  # ============================================================================
+
+  - id: python-sql-injection-format
+    languages: [python]
+    message: "Potential SQL injection via string formatting. Use parameterized queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CURSOR.execute($QUERY % $PARAMS)
+          - pattern: |
+              $CURSOR.execute($QUERY.format(...))
+          - pattern: |
+              $CURSOR.execute(f"...{$VAR}...")
+          - pattern: |
+              $CURSOR.execute($QUERY + $USER_INPUT)
+
+  - id: python-sql-injection-executemany
+    languages: [python]
+    message: "Potential SQL injection in executemany. Use parameterized queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CURSOR.executemany($QUERY % $PARAMS, ...)
+          - pattern: |
+              $CURSOR.executemany($QUERY.format(...), ...)
+          - pattern: |
+              $CURSOR.executemany(f"...{$VAR}...", ...)
+
+  - id: python-sqlalchemy-text-injection
+    languages: [python]
+    message: "SQL injection in SQLAlchemy text(). Use bound parameters."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              text($QUERY % $PARAMS)
+          - pattern: |
+              text($QUERY.format(...))
+          - pattern: |
+              text(f"...{$VAR}...")
+          - pattern: |
+              $DB.execute(text($QUERY + $USER_INPUT))
+
+  - id: python-sqlalchemy-raw-execute
+    languages: [python]
+    message: "Raw SQL execution in SQLAlchemy. Prefer ORM methods."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $ENGINE.execute($QUERY + $USER_INPUT)
+          - pattern: |
+              $SESSION.execute(f"...{$VAR}...")
+          - pattern: |
+              $CONN.execute($QUERY.format(...))
+
+  # ============================================================================
+  # COMMAND INJECTION
+  # ============================================================================
+
+  - id: python-command-injection-subprocess
+    languages: [python]
+    message: "Command injection via subprocess with shell=True. Avoid shell=True."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              subprocess.call($CMD, shell=True, ...)
+          - pattern: |
+              subprocess.run($CMD, shell=True, ...)
+          - pattern: |
+              subprocess.Popen($CMD, shell=True, ...)
+          - pattern: |
+              subprocess.check_output($CMD, shell=True, ...)
+          - pattern: |
+              subprocess.check_call($CMD, shell=True, ...)
+          - pattern: |
+              subprocess.getoutput($CMD)
+          - pattern: |
+              subprocess.getstatusoutput($CMD)
+
+  - id: python-command-injection-os
+    languages: [python]
+    message: "Command injection via os module. Use subprocess with shell=False."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    patterns:
+      - pattern-either:
+          - pattern: os.system($CMD)
+          - pattern: os.popen($CMD)
+          - pattern: os.popen2($CMD)
+          - pattern: os.popen3($CMD)
+          - pattern: os.popen4($CMD)
+          - pattern: os.spawnl(..., $CMD, ...)
+          - pattern: os.spawnle(..., $CMD, ...)
+          - pattern: os.spawnlp(..., $CMD, ...)
+          - pattern: os.spawnv(..., $CMD, ...)
+          - pattern: os.spawnve(..., $CMD, ...)
+
+  - id: python-command-injection-commands
+    languages: [python]
+    message: "Deprecated commands module allows command injection."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    patterns:
+      - pattern-either:
+          - pattern: commands.getoutput($CMD)
+          - pattern: commands.getstatusoutput($CMD)
+
+  # ============================================================================
+  # CODE INJECTION (EVAL/EXEC)
+  # ============================================================================
+
+  - id: python-eval-injection
+    languages: [python]
+    message: "eval() can execute arbitrary code. Avoid with user input."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+    pattern: eval($CODE)
+
+  - id: python-exec-injection
+    languages: [python]
+    message: "exec() can execute arbitrary code. Avoid with user input."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+    pattern: exec($CODE)
+
+  - id: python-compile-injection
+    languages: [python]
+    message: "compile() with user input can lead to code execution."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+    pattern: compile($CODE, ...)
+
+  - id: python-execfile-injection
+    languages: [python]
+    message: "execfile() executes arbitrary Python files."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+    pattern: execfile($FILE)
+
+  - id: python-input-python2
+    languages: [python]
+    message: "input() in Python 2 evaluates input. Use raw_input() instead."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+    pattern: input($PROMPT)
+
+  # ============================================================================
+  # DESERIALIZATION VULNERABILITIES
+  # ============================================================================
+
+  - id: python-pickle-insecure
+    languages: [python]
+    message: "Pickle deserialization is insecure with untrusted data."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      owasp: "A08:2021 - Software and Data Integrity Failures"
+    patterns:
+      - pattern-either:
+          - pattern: pickle.load(...)
+          - pattern: pickle.loads(...)
+          - pattern: _pickle.load(...)
+          - pattern: _pickle.loads(...)
+          - pattern: cPickle.load(...)
+          - pattern: cPickle.loads(...)
+
+  - id: python-yaml-unsafe-load
+    languages: [python]
+    message: "yaml.load() is unsafe. Use yaml.safe_load() instead."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    patterns:
+      - pattern: yaml.load($DATA)
+      - pattern: yaml.load($DATA, Loader=yaml.Loader)
+      - pattern: yaml.load($DATA, Loader=yaml.UnsafeLoader)
+      - pattern: yaml.load($DATA, Loader=yaml.FullLoader)
+    fix: yaml.safe_load($DATA)
+
+  - id: python-yaml-unsafe-load-all
+    languages: [python]
+    message: "yaml.load_all() is unsafe. Use yaml.safe_load_all() instead."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    pattern: yaml.load_all($DATA)
+    fix: yaml.safe_load_all($DATA)
+
+  - id: python-marshal-insecure
+    languages: [python]
+    message: "marshal module is insecure for untrusted data."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    patterns:
+      - pattern-either:
+          - pattern: marshal.load(...)
+          - pattern: marshal.loads(...)
+
+  - id: python-shelve-insecure
+    languages: [python]
+    message: "shelve uses pickle internally. Insecure with untrusted data."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    pattern: shelve.open($FILE)
+
+  - id: python-dill-insecure
+    languages: [python]
+    message: "dill deserialization is insecure with untrusted data."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    patterns:
+      - pattern-either:
+          - pattern: dill.load(...)
+          - pattern: dill.loads(...)
+
+  - id: python-jsonpickle-insecure
+    languages: [python]
+    message: "jsonpickle can execute arbitrary code during deserialization."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    patterns:
+      - pattern-either:
+          - pattern: jsonpickle.decode(...)
+          - pattern: jsonpickle.loads(...)
+
+  # ============================================================================
+  # PATH TRAVERSAL
+  # ============================================================================
+
+  - id: python-path-traversal-open
+    languages: [python]
+    message: "Potential path traversal. Validate and sanitize file paths."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              open($PATH + $USER_INPUT, ...)
+          - pattern: |
+              open(f"...{$USER_INPUT}...", ...)
+          - pattern: |
+              open($PATH.format($USER_INPUT), ...)
+          - pattern: |
+              open(os.path.join(..., $USER_INPUT), ...)
+
+  - id: python-path-traversal-pathlib
+    languages: [python]
+    message: "Path traversal with pathlib. Validate user input."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              Path($USER_INPUT)
+          - pattern: |
+              $PATH / $USER_INPUT
+          - pattern: |
+              $PATH.joinpath($USER_INPUT)
+
+  - id: python-path-traversal-shutil
+    languages: [python]
+    message: "Path traversal in file operations. Validate paths."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+    patterns:
+      - pattern-either:
+          - pattern: shutil.copy($USER_INPUT, ...)
+          - pattern: shutil.copy(..., $USER_INPUT)
+          - pattern: shutil.move($USER_INPUT, ...)
+          - pattern: shutil.move(..., $USER_INPUT)
+          - pattern: shutil.rmtree($USER_INPUT)
+          - pattern: shutil.copytree($USER_INPUT, ...)
+
+  - id: python-path-traversal-send-file
+    languages: [python]
+    message: "Flask send_file with user input. Validate path."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+    patterns:
+      - pattern-either:
+          - pattern: send_file($USER_INPUT)
+          - pattern: send_from_directory(..., $USER_INPUT)
+
+  # ============================================================================
+  # SERVER-SIDE REQUEST FORGERY (SSRF)
+  # ============================================================================
+
+  - id: python-ssrf-requests
+    languages: [python]
+    message: "Potential SSRF. Validate and whitelist URLs."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-918: Server-Side Request Forgery"
+      owasp: "A10:2021 - Server-Side Request Forgery"
+    patterns:
+      - pattern-either:
+          - pattern: requests.get($USER_INPUT, ...)
+          - pattern: requests.post($USER_INPUT, ...)
+          - pattern: requests.put($USER_INPUT, ...)
+          - pattern: requests.delete($USER_INPUT, ...)
+          - pattern: requests.patch($USER_INPUT, ...)
+          - pattern: requests.head($USER_INPUT, ...)
+          - pattern: requests.options($USER_INPUT, ...)
+          - pattern: requests.request(..., $USER_INPUT, ...)
+
+  - id: python-ssrf-urllib
+    languages: [python]
+    message: "Potential SSRF via urllib. Validate URLs."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-918: Server-Side Request Forgery"
+    patterns:
+      - pattern-either:
+          - pattern: urllib.request.urlopen($USER_INPUT)
+          - pattern: urllib.request.urlretrieve($USER_INPUT, ...)
+          - pattern: urllib2.urlopen($USER_INPUT)
+          - pattern: urllib.urlopen($USER_INPUT)
+
+  - id: python-ssrf-httpx
+    languages: [python]
+    message: "Potential SSRF via httpx. Validate URLs."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-918: Server-Side Request Forgery"
+    patterns:
+      - pattern-either:
+          - pattern: httpx.get($USER_INPUT, ...)
+          - pattern: httpx.post($USER_INPUT, ...)
+          - pattern: httpx.put($USER_INPUT, ...)
+          - pattern: httpx.delete($USER_INPUT, ...)
+          - pattern: $CLIENT.get($USER_INPUT, ...)
+          - pattern: $CLIENT.post($USER_INPUT, ...)
+
+  - id: python-ssrf-aiohttp
+    languages: [python]
+    message: "Potential SSRF via aiohttp. Validate URLs."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-918: Server-Side Request Forgery"
+    patterns:
+      - pattern-either:
+          - pattern: $SESSION.get($USER_INPUT, ...)
+          - pattern: $SESSION.post($USER_INPUT, ...)
+          - pattern: aiohttp.ClientSession().get($USER_INPUT, ...)
+
+  # ============================================================================
+  # XSS (CROSS-SITE SCRIPTING)
+  # ============================================================================
+
+  - id: python-xss-flask-markup
+    languages: [python]
+    message: "Potential XSS via Markup(). Escape user input."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+      owasp: "A03:2021 - Injection"
+    pattern: Markup($USER_INPUT)
+
+  - id: python-xss-flask-render-template-string
+    languages: [python]
+    message: "Template injection via render_template_string. Use render_template."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+    pattern: render_template_string($USER_INPUT)
+
+  - id: python-xss-jinja2-autoescape-off
+    languages: [python]
+    message: "Jinja2 autoescape disabled. Enable autoescape=True."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+    patterns:
+      - pattern-either:
+          - pattern: Environment(..., autoescape=False, ...)
+          - pattern: Environment(..., autoescape=select_autoescape([]), ...)
+
+  - id: python-xss-django-safestring
+    languages: [python]
+    message: "mark_safe() with user input can cause XSS."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+    patterns:
+      - pattern-either:
+          - pattern: mark_safe($USER_INPUT)
+          - pattern: SafeString($USER_INPUT)
+          - pattern: SafeText($USER_INPUT)
+
+  - id: python-xss-mako-template
+    languages: [python]
+    message: "Mako templates don't escape by default. Use | h filter."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+    pattern: Template($TEMPLATE).render(...)
+
+  # ============================================================================
+  # TEMPLATE INJECTION (SSTI)
+  # ============================================================================
+
+  - id: python-ssti-jinja2
+    languages: [python]
+    message: "Server-Side Template Injection. Never pass user input to templates."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-1336: Server-Side Template Injection"
+    patterns:
+      - pattern-either:
+          - pattern: Template($USER_INPUT).render(...)
+          - pattern: $ENV.from_string($USER_INPUT).render(...)
+          - pattern: jinja2.Template($USER_INPUT)
+
+  - id: python-ssti-mako
+    languages: [python]
+    message: "Mako template injection. Avoid user input in templates."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-1336: Server-Side Template Injection"
+    patterns:
+      - pattern-either:
+          - pattern: mako.template.Template($USER_INPUT)
+          - pattern: Template($USER_INPUT)
+
+  # ============================================================================
+  # XML VULNERABILITIES (XXE)
+  # ============================================================================
+
+  - id: python-xxe-etree
+    languages: [python]
+    message: "XML parsing vulnerable to XXE. Disable external entities."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+      owasp: "A05:2021 - Security Misconfiguration"
+    patterns:
+      - pattern-either:
+          - pattern: etree.parse($INPUT)
+          - pattern: etree.fromstring($INPUT)
+          - pattern: etree.iterparse($INPUT)
+          - pattern: ElementTree.parse($INPUT)
+          - pattern: ElementTree.fromstring($INPUT)
+
+  - id: python-xxe-xml-etree
+    languages: [python]
+    message: "xml.etree is not vulnerable to XXE by default, but validate input."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+    patterns:
+      - pattern-either:
+          - pattern: xml.etree.ElementTree.parse($INPUT)
+          - pattern: xml.etree.ElementTree.fromstring($INPUT)
+
+  - id: python-xxe-lxml-unsafe
+    languages: [python]
+    message: "lxml with resolve_entities=True is vulnerable to XXE."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+    patterns:
+      - pattern-either:
+          - pattern: etree.XMLParser(resolve_entities=True)
+          - pattern: etree.parse(..., parser=etree.XMLParser(resolve_entities=True))
+
+  - id: python-xxe-xmlrpc
+    languages: [python]
+    message: "xmlrpc is vulnerable to XXE attacks."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+    patterns:
+      - pattern-either:
+          - pattern: xmlrpc.client.ServerProxy($URL)
+          - pattern: xmlrpclib.ServerProxy($URL)
+
+  - id: python-xxe-pulldom
+    languages: [python]
+    message: "xml.dom.pulldom is vulnerable to XXE."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+    pattern: xml.dom.pulldom.parse($INPUT)
+
+  - id: python-xxe-minidom
+    languages: [python]
+    message: "xml.dom.minidom is vulnerable to XXE."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+    patterns:
+      - pattern-either:
+          - pattern: xml.dom.minidom.parse($INPUT)
+          - pattern: xml.dom.minidom.parseString($INPUT)
+
+  - id: python-xxe-sax
+    languages: [python]
+    message: "xml.sax is vulnerable to XXE."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-611: XXE"
+    patterns:
+      - pattern-either:
+          - pattern: xml.sax.parse($INPUT, ...)
+          - pattern: xml.sax.parseString($INPUT, ...)
+
+  # ============================================================================
+  # CRYPTOGRAPHIC ISSUES
+  # ============================================================================
+
+  - id: python-weak-hash-md5
+    languages: [python]
+    message: "MD5 is cryptographically weak. Use SHA-256 or better."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: hashlib.md5(...)
+          - pattern: hashlib.new("md5", ...)
+          - pattern: MD5.new(...)
+
+  - id: python-weak-hash-sha1
+    languages: [python]
+    message: "SHA1 is cryptographically weak. Use SHA-256 or better."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: hashlib.sha1(...)
+          - pattern: hashlib.new("sha1", ...)
+          - pattern: SHA.new(...)
+          - pattern: SHA1.new(...)
+
+  - id: python-weak-cipher-des
+    languages: [python]
+    message: "DES is weak. Use AES instead."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: Crypto.Cipher.DES.new(...)
+          - pattern: Cryptodome.Cipher.DES.new(...)
+          - pattern: DES.new(...)
+          - pattern: DES3.new(...)
+
+  - id: python-weak-cipher-blowfish
+    languages: [python]
+    message: "Blowfish has known weaknesses. Use AES instead."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: Crypto.Cipher.Blowfish.new(...)
+          - pattern: Blowfish.new(...)
+
+  - id: python-weak-cipher-rc4
+    languages: [python]
+    message: "RC4 is broken. Use AES instead."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: Crypto.Cipher.ARC4.new(...)
+          - pattern: ARC4.new(...)
+
+  - id: python-ecb-mode
+    languages: [python]
+    message: "ECB mode is insecure. Use CBC or GCM."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: AES.new(..., AES.MODE_ECB, ...)
+          - pattern: AES.new(..., mode=AES.MODE_ECB, ...)
+          - pattern: Cipher(..., modes.ECB(), ...)
+
+  - id: python-insecure-random
+    languages: [python]
+    message: "random module is not cryptographically secure. Use secrets module."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-338: Use of Cryptographically Weak PRNG"
+    patterns:
+      - pattern-either:
+          - pattern: random.random()
+          - pattern: random.randint(...)
+          - pattern: random.randrange(...)
+          - pattern: random.choice(...)
+          - pattern: random.choices(...)
+          - pattern: random.sample(...)
+          - pattern: random.getrandbits(...)
+
+  - id: python-weak-rsa-key
+    languages: [python]
+    message: "RSA key size should be at least 2048 bits."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+    patterns:
+      - pattern-either:
+          - pattern: RSA.generate(1024, ...)
+          - pattern: RSA.generate(512, ...)
+          - pattern: rsa.generate_private_key(..., key_size=1024, ...)
+          - pattern: rsa.generate_private_key(..., key_size=512, ...)
+
+  - id: python-hardcoded-iv
+    languages: [python]
+    message: "Hardcoded IV detected. Generate random IV for each encryption."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-329: Not Using Random IV with CBC Mode"
+    patterns:
+      - pattern-either:
+          - pattern: AES.new($KEY, $MODE, iv=b"...")
+          - pattern: AES.new($KEY, $MODE, IV=b"...")
+
+  - id: python-weak-pbkdf2-iterations
+    languages: [python]
+    message: "PBKDF2 iterations too low. Use at least 100,000."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-916: Insufficient Password Hashing"
+    pattern: pbkdf2_hmac(..., iterations=$ITER, ...)
+
+  # ============================================================================
+  # HARDCODED SECRETS
+  # ============================================================================
+
+  - id: python-hardcoded-password
+    languages: [python]
+    message: "Hardcoded password detected. Use environment variables."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: password = "..."
+          - pattern: PASSWORD = "..."
+          - pattern: passwd = "..."
+          - pattern: pwd = "..."
+
+  - id: python-hardcoded-api-key
+    languages: [python]
+    message: "Hardcoded API key detected. Use environment variables."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: api_key = "..."
+          - pattern: API_KEY = "..."
+          - pattern: apikey = "..."
+          - pattern: APIKEY = "..."
+
+  - id: python-hardcoded-secret
+    languages: [python]
+    message: "Hardcoded secret detected. Use environment variables."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: secret = "..."
+          - pattern: SECRET = "..."
+          - pattern: secret_key = "..."
+          - pattern: SECRET_KEY = "..."
+
+  - id: python-hardcoded-aws-key
+    languages: [python]
+    message: "Hardcoded AWS credentials detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: AWS_ACCESS_KEY_ID = "..."
+          - pattern: AWS_SECRET_ACCESS_KEY = "..."
+          - pattern: aws_access_key_id = "..."
+          - pattern: aws_secret_access_key = "..."
+          - pattern-regex: '["'']AKIA[0-9A-Z]{16}["'']'
+
+  - id: python-hardcoded-token
+    languages: [python]
+    message: "Hardcoded token detected. Use environment variables."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: token = "..."
+          - pattern: TOKEN = "..."
+          - pattern: access_token = "..."
+          - pattern: ACCESS_TOKEN = "..."
+          - pattern: auth_token = "..."
+
+  - id: python-hardcoded-private-key
+    languages: [python]
+    message: "Hardcoded private key detected."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-regex: '-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'
+
+  # ============================================================================
+  # DJANGO SECURITY
+  # ============================================================================
+
+  - id: python-django-raw-sql
+    languages: [python]
+    message: "Raw SQL in Django. Use ORM or parameterized queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: SQL Injection"
+    patterns:
+      - pattern-either:
+          - pattern: $MODEL.objects.raw($QUERY % $PARAMS)
+          - pattern: $MODEL.objects.raw($QUERY.format(...))
+          - pattern: $MODEL.objects.raw(f"...{$VAR}...")
+          - pattern: $MODEL.objects.extra(where=[$QUERY % $PARAMS])
+          - pattern: $MODEL.objects.extra(where=[f"...{$VAR}..."])
+          - pattern: RawSQL($QUERY % $PARAMS, ...)
+          - pattern: RawSQL(f"...{$VAR}...", ...)
+
+  - id: python-django-debug-true
+    languages: [python]
+    message: "Django DEBUG=True. Disable in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+    pattern: DEBUG = True
+
+  - id: python-django-secret-key-exposed
+    languages: [python]
+    message: "Django SECRET_KEY in code. Use environment variable."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern: SECRET_KEY = "..."
+
+  - id: python-django-csrf-exempt
+    languages: [python]
+    message: "CSRF protection disabled. Ensure this is intentional."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-352: Cross-Site Request Forgery"
+    pattern: "@csrf_exempt"
+
+  - id: python-django-no-csrf-middleware
+    languages: [python]
+    message: "CsrfViewMiddleware not in MIDDLEWARE. CSRF protection disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-352: Cross-Site Request Forgery"
+    pattern: |
+      MIDDLEWARE = [
+        ...
+      ]
+    pattern-not: |
+      MIDDLEWARE = [
+        ...,
+        "django.middleware.csrf.CsrfViewMiddleware",
+        ...
+      ]
+
+  - id: python-django-secure-ssl-redirect
+    languages: [python]
+    message: "SECURE_SSL_REDIRECT should be True in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern: SECURE_SSL_REDIRECT = False
+
+  - id: python-django-session-cookie-secure
+    languages: [python]
+    message: "SESSION_COOKIE_SECURE should be True in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-614: Sensitive Cookie Without Secure Flag"
+    pattern: SESSION_COOKIE_SECURE = False
+
+  - id: python-django-csrf-cookie-secure
+    languages: [python]
+    message: "CSRF_COOKIE_SECURE should be True in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-614: Sensitive Cookie Without Secure Flag"
+    pattern: CSRF_COOKIE_SECURE = False
+
+  - id: python-django-allowed-hosts-wildcard
+    languages: [python]
+    message: "ALLOWED_HOSTS should not contain wildcard."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-16: Configuration"
+    patterns:
+      - pattern-either:
+          - pattern: ALLOWED_HOSTS = ["*"]
+          - pattern: ALLOWED_HOSTS = ["*", ...]
+
+  - id: python-django-xframe-options
+    languages: [python]
+    message: "X_FRAME_OPTIONS should be set to DENY or SAMEORIGIN."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-1021: Improper Restriction of Rendered UI Layers"
+    pattern: X_FRAME_OPTIONS = "ALLOW"
+
+  # ============================================================================
+  # FLASK SECURITY
+  # ============================================================================
+
+  - id: python-flask-debug-true
+    languages: [python]
+    message: "Flask debug mode enabled. Disable in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+    patterns:
+      - pattern-either:
+          - pattern: app.run(debug=True)
+          - pattern: app.run(..., debug=True, ...)
+          - pattern: app.debug = True
+          - pattern: DEBUG = True
+
+  - id: python-flask-secret-key-exposed
+    languages: [python]
+    message: "Flask secret key in code. Use environment variable."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: app.secret_key = "..."
+          - pattern: app.config["SECRET_KEY"] = "..."
+          - pattern: SECRET_KEY = "..."
+
+  - id: python-flask-open-redirect
+    languages: [python]
+    message: "Potential open redirect. Validate redirect URLs."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-601: Open Redirect"
+    patterns:
+      - pattern-either:
+          - pattern: redirect($USER_INPUT)
+          - pattern: redirect(request.args.get(...))
+          - pattern: redirect(request.form.get(...))
+
+  - id: python-flask-host-binding
+    languages: [python]
+    message: "Flask bound to all interfaces. Consider restricting to localhost."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-668: Exposure of Resource to Wrong Sphere"
+    pattern: app.run(host="0.0.0.0", ...)
+
+  - id: python-flask-wtf-csrf-disabled
+    languages: [python]
+    message: "Flask-WTF CSRF protection disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-352: Cross-Site Request Forgery"
+    pattern: WTF_CSRF_ENABLED = False
+
+  # ============================================================================
+  # FASTAPI SECURITY
+  # ============================================================================
+
+  - id: python-fastapi-debug-true
+    languages: [python]
+    message: "FastAPI debug mode. Disable in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+    pattern: FastAPI(debug=True)
+
+  - id: python-fastapi-cors-allow-all
+    languages: [python]
+    message: "CORS allows all origins. Restrict to trusted domains."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-942: Overly Permissive CORS"
+    patterns:
+      - pattern-either:
+          - pattern: CORSMiddleware(..., allow_origins=["*"], ...)
+          - pattern: CORSMiddleware(..., allow_origin_regex=".*", ...)
+
+  # ============================================================================
+  # JWT VULNERABILITIES
+  # ============================================================================
+
+  - id: python-jwt-no-verify
+    languages: [python]
+    message: "JWT decoded without verification. Always verify signatures."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-347: Improper Verification of Cryptographic Signature"
+    patterns:
+      - pattern-either:
+          - pattern: jwt.decode($TOKEN, options={"verify_signature": False})
+          - pattern: jwt.decode($TOKEN, ..., verify=False)
+          - pattern: jwt.decode($TOKEN, algorithms=["none"])
+          - pattern: jwt.decode($TOKEN, ..., options={"verify": False}, ...)
+
+  - id: python-jwt-weak-secret
+    languages: [python]
+    message: "JWT using weak or hardcoded secret."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: jwt.encode($PAYLOAD, "...", ...)
+          - pattern: jwt.decode($TOKEN, "...", ...)
+
+  - id: python-jwt-none-algorithm
+    languages: [python]
+    message: "JWT 'none' algorithm allows signature bypass."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-327: Use of Broken Crypto Algorithm"
+    patterns:
+      - pattern-either:
+          - pattern: jwt.encode(..., algorithm="none")
+          - pattern: jwt.encode(..., algorithm=None)
+
+  # ============================================================================
+  # LOGGING VULNERABILITIES
+  # ============================================================================
+
+  - id: python-log-injection
+    languages: [python]
+    message: "Potential log injection. Sanitize user input in logs."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-117: Improper Output Neutralization for Logs"
+    patterns:
+      - pattern-either:
+          - pattern: logging.info(f"...{$USER_INPUT}...")
+          - pattern: logging.debug(f"...{$USER_INPUT}...")
+          - pattern: logging.warning(f"...{$USER_INPUT}...")
+          - pattern: logging.error(f"...{$USER_INPUT}...")
+          - pattern: logging.critical(f"...{$USER_INPUT}...")
+          - pattern: logger.info(f"...{$USER_INPUT}...")
+          - pattern: logger.debug(f"...{$USER_INPUT}...")
+          - pattern: logger.warning(f"...{$USER_INPUT}...")
+          - pattern: logger.error(f"...{$USER_INPUT}...")
+
+  - id: python-sensitive-data-logging
+    languages: [python]
+    message: "Potential sensitive data in logs."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-532: Information Exposure Through Log Files"
+    patterns:
+      - pattern-either:
+          - pattern: logging.$LEVEL(..., password=..., ...)
+          - pattern: logging.$LEVEL(..., token=..., ...)
+          - pattern: logging.$LEVEL(..., secret=..., ...)
+          - pattern: logging.$LEVEL(..., api_key=..., ...)
+
+  # ============================================================================
+  # REGEX DENIAL OF SERVICE (ReDoS)
+  # ============================================================================
+
+  - id: python-regex-dos
+    languages: [python]
+    message: "Potential ReDoS. Set timeout or simplify regex."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-1333: Inefficient Regular Expression Complexity"
+    patterns:
+      - pattern-either:
+          - pattern: re.match($PATTERN, $INPUT)
+          - pattern: re.search($PATTERN, $INPUT)
+          - pattern: re.findall($PATTERN, $INPUT)
+          - pattern: re.sub($PATTERN, ..., $INPUT)
+          - pattern: re.split($PATTERN, $INPUT)
+
+  - id: python-regex-compile-user-input
+    languages: [python]
+    message: "Regex compiled from user input. Risk of ReDoS."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-1333: Inefficient Regular Expression Complexity"
+    pattern: re.compile($USER_INPUT)
+
+  # ============================================================================
+  # TEMPORARY FILE VULNERABILITIES
+  # ============================================================================
+
+  - id: python-tempfile-insecure
+    languages: [python]
+    message: "mktemp() is insecure. Use mkstemp() or NamedTemporaryFile."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-377: Insecure Temporary File"
+    pattern: tempfile.mktemp(...)
+
+  - id: python-tempfile-hardcoded-tmp
+    languages: [python]
+    message: "Hardcoded /tmp path. Use tempfile module."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-377: Insecure Temporary File"
+    patterns:
+      - pattern-either:
+          - pattern: open("/tmp/...", ...)
+          - pattern: Path("/tmp/...")
+          - pattern: os.path.join("/tmp", ...)
+
+  # ============================================================================
+  # ASSERT STATEMENTS
+  # ============================================================================
+
+  - id: python-assert-security-check
+    languages: [python]
+    message: "Assert removed in optimized mode. Don't use for security."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-617: Reachable Assertion"
+    pattern: assert $CONDITION
+
+  # ============================================================================
+  # SSL/TLS VULNERABILITIES
+  # ============================================================================
+
+  - id: python-ssl-unverified
+    languages: [python]
+    message: "SSL verification disabled. Vulnerable to MITM attacks."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+    patterns:
+      - pattern-either:
+          - pattern: requests.get(..., verify=False, ...)
+          - pattern: requests.post(..., verify=False, ...)
+          - pattern: $SESSION.get(..., verify=False, ...)
+          - pattern: $SESSION.post(..., verify=False, ...)
+          - pattern: urllib3.disable_warnings(...)
+          - pattern: ssl._create_unverified_context()
+
+  - id: python-ssl-weak-version
+    languages: [python]
+    message: "Weak SSL/TLS version. Use TLS 1.2+."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+    patterns:
+      - pattern-either:
+          - pattern: ssl.PROTOCOL_SSLv2
+          - pattern: ssl.PROTOCOL_SSLv3
+          - pattern: ssl.PROTOCOL_TLSv1
+          - pattern: ssl.PROTOCOL_TLSv1_1
+          - pattern: ssl.TLSVersion.SSLv3
+          - pattern: ssl.TLSVersion.TLSv1
+          - pattern: ssl.TLSVersion.TLSv1_1
+
+  - id: python-ssl-no-hostname-check
+    languages: [python]
+    message: "SSL hostname verification disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-297: Improper Validation of Certificate with Host Mismatch"
+    pattern: $CTX.check_hostname = False
+
+  # ============================================================================
+  # LDAP INJECTION
+  # ============================================================================
+
+  - id: python-ldap-injection
+    languages: [python]
+    message: "Potential LDAP injection. Sanitize user input."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-90: LDAP Injection"
+    patterns:
+      - pattern-either:
+          - pattern: $CONN.search_s(..., $FILTER % $USER_INPUT, ...)
+          - pattern: $CONN.search_s(..., f"...{$USER_INPUT}...", ...)
+          - pattern: $CONN.search(..., filterstr=$FILTER % $USER_INPUT)
+          - pattern: $CONN.search(..., filterstr=f"...{$USER_INPUT}...")
+
+  # ============================================================================
+  # XPATH INJECTION
+  # ============================================================================
+
+  - id: python-xpath-injection
+    languages: [python]
+    message: "Potential XPath injection. Parameterize queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-643: XPath Injection"
+    patterns:
+      - pattern-either:
+          - pattern: $TREE.xpath($XPATH % $USER_INPUT)
+          - pattern: $TREE.xpath(f"...{$USER_INPUT}...")
+          - pattern: $TREE.xpath($XPATH.format($USER_INPUT))
+          - pattern: $ELEMENT.find($XPATH % $USER_INPUT)
+
+  # ============================================================================
+  # UNSAFE FUNCTIONS
+  # ============================================================================
+
+  - id: python-unsafe-popen
+    languages: [python]
+    message: "popen() is vulnerable to shell injection."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    patterns:
+      - pattern-either:
+          - pattern: os.popen($CMD)
+          - pattern: os.popen2($CMD)
+          - pattern: os.popen3($CMD)
+          - pattern: os.popen4($CMD)
+
+  - id: python-unsafe-tarfile-extract
+    languages: [python]
+    message: "Tarfile extraction vulnerable to path traversal."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+    patterns:
+      - pattern-either:
+          - pattern: tarfile.open($FILE).extractall(...)
+          - pattern: $TAR.extractall(...)
+          - pattern: $TAR.extract($MEMBER, ...)
+
+  - id: python-unsafe-zipfile-extract
+    languages: [python]
+    message: "Zipfile extraction vulnerable to path traversal."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-22: Path Traversal"
+    patterns:
+      - pattern-either:
+          - pattern: zipfile.ZipFile($FILE).extractall(...)
+          - pattern: $ZIP.extractall(...)
+
+  # ============================================================================
+  # INFORMATION DISCLOSURE
+  # ============================================================================
+
+  - id: python-exception-disclosure
+    languages: [python]
+    message: "Exception details exposed. Catch and log without exposing."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-209: Information Exposure Through Error Message"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              except $EX:
+                return str($EX)
+          - pattern: |
+              except $EX:
+                return $EX.args
+          - pattern: |
+              except:
+                return traceback.format_exc()
+
+  - id: python-traceback-exposure
+    languages: [python]
+    message: "Traceback may expose sensitive information."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-209: Information Exposure Through Error Message"
+    patterns:
+      - pattern-either:
+          - pattern: traceback.print_exc()
+          - pattern: traceback.format_exc()
+
+  # ============================================================================
+  # NETWORK SECURITY
+  # ============================================================================
+
+  - id: python-binding-all-interfaces
+    languages: [python]
+    message: "Server binds to all interfaces. Consider localhost."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-668: Exposure of Resource to Wrong Sphere"
+    patterns:
+      - pattern-either:
+          - pattern: socket.bind(("0.0.0.0", ...))
+          - pattern: socket.bind(("", ...))
+          - pattern: $SERVER.bind(("0.0.0.0", ...))
+
+  - id: python-ftp-cleartext
+    languages: [python]
+    message: "FTP transmits credentials in cleartext. Use SFTP."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    patterns:
+      - pattern-either:
+          - pattern: ftplib.FTP(...)
+          - pattern: FTP($HOST)
+
+  - id: python-telnet-cleartext
+    languages: [python]
+    message: "Telnet transmits in cleartext. Use SSH."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern: telnetlib.Telnet(...)
+
+  # ============================================================================
+  # DATABASE SECURITY
+  # ============================================================================
+
+  - id: python-mongodb-injection
+    languages: [python]
+    message: "Potential MongoDB injection. Sanitize queries."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-943: NoSQL Injection"
+    patterns:
+      - pattern-either:
+          - pattern: $COLL.find({"$where": $USER_INPUT})
+          - pattern: $COLL.find({..., "$where": $USER_INPUT, ...})
+
+  - id: python-redis-eval
+    languages: [python]
+    message: "Redis eval with user input allows code execution."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern: $REDIS.eval($SCRIPT, ...)
+
+  # ============================================================================
+  # ASYNC VULNERABILITIES
+  # ============================================================================
+
+  - id: python-async-subprocess-shell
+    languages: [python]
+    message: "Async subprocess with shell=True. Avoid shell=True."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    patterns:
+      - pattern-either:
+          - pattern: await asyncio.create_subprocess_shell($CMD)
+          - pattern: asyncio.create_subprocess_shell($CMD)
+
+  # ============================================================================
+  # PARAMIKO/SSH VULNERABILITIES
+  # ============================================================================
+
+  - id: python-paramiko-missing-host-key-policy
+    languages: [python]
+    message: "SSH auto-adds host keys. Verify keys manually."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-322: Key Exchange without Entity Authentication"
+    patterns:
+      - pattern-either:
+          - pattern: $CLIENT.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+          - pattern: $CLIENT.set_missing_host_key_policy(AutoAddPolicy())
+          - pattern: set_missing_host_key_policy(paramiko.WarningPolicy())
+
+  # ============================================================================
+  # BOTO3/AWS VULNERABILITIES
+  # ============================================================================
+
+  - id: python-boto3-hardcoded-credentials
+    languages: [python]
+    message: "Hardcoded AWS credentials in boto3."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: boto3.client(..., aws_access_key_id="...", ...)
+          - pattern: boto3.client(..., aws_secret_access_key="...", ...)
+          - pattern: boto3.Session(aws_access_key_id="...", ...)
+          - pattern: boto3.Session(aws_secret_access_key="...", ...)
+
+  - id: python-boto3-public-s3
+    languages: [python]
+    message: "S3 object set to public. Verify this is intentional."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+    patterns:
+      - pattern-either:
+          - pattern: $OBJ.put(..., ACL="public-read", ...)
+          - pattern: $OBJ.put(..., ACL="public-read-write", ...)
+          - pattern: $BUCKET.put_object(..., ACL="public-read", ...)
+
+  # ============================================================================
+  # CELERY VULNERABILITIES
+  # ============================================================================
+
+  - id: python-celery-pickle-serializer
+    languages: [python]
+    message: "Celery pickle serializer is insecure. Use JSON."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    patterns:
+      - pattern-either:
+          - pattern: CELERY_TASK_SERIALIZER = "pickle"
+          - pattern: CELERY_RESULT_SERIALIZER = "pickle"
+          - pattern: CELERY_ACCEPT_CONTENT = [..., "pickle", ...]
+          - pattern: task_serializer = "pickle"
+
+  # ============================================================================
+  # WERKZEUG VULNERABILITIES
+  # ============================================================================
+
+  - id: python-werkzeug-debugger
+    languages: [python]
+    message: "Werkzeug debugger enabled. Disable in production."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+    patterns:
+      - pattern-either:
+          - pattern: DebuggedApplication($APP, ...)
+          - pattern: run_simple(..., use_debugger=True, ...)
+
+  # ============================================================================
+  # SUBPROCESS SECURITY
+  # ============================================================================
+
+  - id: python-subprocess-untrusted-input
+    languages: [python]
+    message: "Subprocess with untrusted input. Validate carefully."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.run([..., $USER_INPUT, ...], ...)
+          - pattern: subprocess.call([..., $USER_INPUT, ...], ...)
+          - pattern: subprocess.Popen([..., $USER_INPUT, ...], ...)
+
+  # ============================================================================
+  # FLASK-ADMIN SECURITY
+  # ============================================================================
+
+  - id: python-flask-admin-no-auth
+    languages: [python]
+    message: "Flask-Admin without authentication. Add auth."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-306: Missing Authentication"
+    pattern: Admin($APP)
+    pattern-not-inside: |
+      class $ADMIN(AdminIndexView):
+        def is_accessible(self):
+          ...
+
+  # ============================================================================
+  # DANGEROUS IMPORTS
+  # ============================================================================
+
+  - id: python-import-pdb
+    languages: [python]
+    message: "pdb imported. Remove debugger before production."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-489: Active Debug Code"
+    patterns:
+      - pattern-either:
+          - pattern: import pdb
+          - pattern: from pdb import set_trace
+          - pattern: pdb.set_trace()
+          - pattern: breakpoint()
+
+  - id: python-import-readline
+    languages: [python]
+    message: "readline with untrusted input can read files."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-94: Code Injection"
+    pattern: import readline
+
+  # ============================================================================
+  # MEMORY VULNERABILITIES
+  # ============================================================================
+
+  - id: python-ctypes-dangerous
+    languages: [python]
+    message: "ctypes can cause memory corruption. Use carefully."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-119: Buffer Errors"
+    patterns:
+      - pattern-either:
+          - pattern: ctypes.CDLL(...)
+          - pattern: ctypes.cast(...)
+          - pattern: ctypes.memmove(...)
+
+  # ============================================================================
+  # PICKLE WITH REDUCE
+  # ============================================================================
+
+  - id: python-pickle-reduce
+    languages: [python]
+    message: "__reduce__ method can execute code during unpickling."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    pattern: |
+      def __reduce__(self):
+        ...
+
+  # ============================================================================
+  # GRAPHQL VULNERABILITIES
+  # ============================================================================
+
+  - id: python-graphql-introspection
+    languages: [python]
+    message: "GraphQL introspection enabled. Disable in production."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+    pattern: introspection=True
+
+  # ============================================================================
+  # TYPE CONFUSION
+  # ============================================================================
+
+  - id: python-isinstance-bypass
+    languages: [python]
+    message: "Type checking can be bypassed. Validate thoroughly."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-843: Type Confusion"
+    pattern: isinstance($OBJ, (...,))
+
+  # ============================================================================
+  # INSECURE FILE PERMISSIONS
+  # ============================================================================
+
+  - id: python-insecure-file-permissions
+    languages: [python]
+    message: "World-writable file permissions. Use restrictive mode."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-732: Incorrect Permission Assignment"
+    patterns:
+      - pattern-either:
+          - pattern: os.chmod($PATH, 0o777)
+          - pattern: os.chmod($PATH, 0o666)
+          - pattern: os.chmod($PATH, 0o755)
+          - pattern: chmod($PATH, 0o777)
+
+  # ============================================================================
+  # TIMING ATTACKS
+  # ============================================================================
+
+  - id: python-timing-attack
+    languages: [python]
+    message: "String comparison vulnerable to timing attacks. Use hmac.compare_digest."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-208: Observable Timing Discrepancy"
+    patterns:
+      - pattern-either:
+          - pattern: $SECRET == $USER_INPUT
+          - pattern: $USER_INPUT == $SECRET
+          - pattern: $TOKEN == request.headers.get(...)
+          - pattern: password == $INPUT
+
+  # ============================================================================
+  # OBJECT INJECTION
+  # ============================================================================
+
+  - id: python-getattr-injection
+    languages: [python]
+    message: "getattr with user input can access private attributes."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-470: Unsafe Reflection"
+    pattern: getattr($OBJ, $USER_INPUT)
+
+  - id: python-setattr-injection
+    languages: [python]
+    message: "setattr with user input can modify any attribute."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-470: Unsafe Reflection"
+    pattern: setattr($OBJ, $USER_INPUT, ...)
+
+  # ============================================================================
+  # URL PARSING VULNERABILITIES
+  # ============================================================================
+
+  - id: python-urlparse-bypass
+    languages: [python]
+    message: "URL parsing can be bypassed. Validate carefully."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-601: Open Redirect"
+    patterns:
+      - pattern-either:
+          - pattern: urlparse($USER_INPUT)
+          - pattern: urllib.parse.urlparse($USER_INPUT)
+
+  # ============================================================================
+  # PANDAS VULNERABILITIES
+  # ============================================================================
+
+  - id: python-pandas-read-pickle
+    languages: [python]
+    message: "pd.read_pickle is insecure with untrusted data."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    patterns:
+      - pattern-either:
+          - pattern: pd.read_pickle(...)
+          - pattern: pandas.read_pickle(...)
+
+  - id: python-pandas-eval
+    languages: [python]
+    message: "pd.eval can execute arbitrary code."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+    patterns:
+      - pattern-either:
+          - pattern: pd.eval($EXPR)
+          - pattern: $DF.eval($EXPR)
+          - pattern: $DF.query($EXPR)
+
+  # ============================================================================
+  # NUMPY VULNERABILITIES
+  # ============================================================================
+
+  - id: python-numpy-load-pickle
+    languages: [python]
+    message: "np.load with allow_pickle=True is insecure."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+    pattern: np.load(..., allow_pickle=True, ...)
+
+  # ============================================================================
+  # HTTPLIB/URLLIB VULNERABILITIES
+  # ============================================================================
+
+  - id: python-http-unencrypted
+    languages: [python]
+    message: "HTTP connection unencrypted. Use HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    patterns:
+      - pattern-either:
+          - pattern: http.client.HTTPConnection(...)
+          - pattern: httplib.HTTPConnection(...)
+
+  # ============================================================================
+  # MISCELLANEOUS
+  # ============================================================================
+
+  - id: python-print-debug
+    languages: [python]
+    message: "Print statement in code. Use logging instead."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern: print(...)
+
+  - id: python-todo-fixme
+    languages: [python]
+    message: "TODO/FIXME comment found. Address before production."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '#.*(TODO|FIXME|XXX|HACK)'
+
+  - id: python-commented-code
+    languages: [python]
+    message: "Commented code detected. Remove before production."
+    severity: INFO
+    metadata:
+      category: best-practice
+    pattern-regex: '#\s*(def |class |import |from )'
