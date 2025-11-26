@@ -1,1 +1,1 @@
-# SemgrepRules
+# devops-rules-semgrep
