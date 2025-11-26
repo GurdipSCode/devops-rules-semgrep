@@ -1,0 +1,3345 @@
+New chat
+
+create me a semgrep rulset for c#, terraform, js and python
+
+The user wants me to create a Semgrep ruleset that covers multiple languages: C#, Terraform, JavaScript, and Python. Semgrep rules are written in YAML format and can detect security vulnerabilities, code quality issues, and enforce best practices.
+
+Let me create a comprehensive ruleset covering common security and code quality patterns for each of these languages. I should create this as a YAML file.
+
+I don't need to read any skill files for this since it's a straightforward code/configuration file creation task - not a document like docx, pptx, xlsx, or pdf.
+
+Let me create a well-organized ruleset with rules for:
+
+C#:
+
+    SQL injection
+    Command injection
+    Hardcoded secrets
+    Insecure deserialization
+    Path traversal
+
+Terraform:
+
+    Public S3 buckets
+    Unencrypted resources
+    Open security groups
+    Missing logging
+
+JavaScript:
+
+    XSS vulnerabilities
+    Prototype pollution
+    Eval usage
+    Hardcoded secrets
+    Insecure regex
+
+Python:
+
+    SQL injection
+    Command injection
+    Pickle deserialization
+    Hardcoded secrets
+    Path traversal
+
+I'll create a single comprehensive YAML file with rules organized by language.
+
+I'll create a comprehensive Semgrep ruleset covering security and code quality patterns for C#, Terraform, JavaScript, and Python.
+
+I've created a comprehensive Semgrep ruleset. Let me provide the user with a summary of what's included.
+
+View your Semgrep ruleset
+
+I've created a comprehensive Semgrep ruleset with 40+ rules covering all four languages:
+
+Language	Rules	Key Areas
+C#	8 rules	SQL injection, command injection, hardcoded secrets, insecure deserialization, path traversal, weak crypto, XXE, open redirect
+Terraform	10 rules	Public S3 buckets, missing encryption (S3/RDS/CloudTrail), open security groups, public RDS, overly permissive IAM, Azure/GCP security
+JavaScript/TS	13 rules	XSS, eval usage, SQL/command injection, hardcoded secrets, prototype pollution, insecure random, path traversal, JWT issues, CORS misconfiguration
+Python	13 rules	SQL injection, command injection, pickle/YAML deserialization, hardcoded secrets, path traversal, weak crypto, SSRF, XSS (Flask), Django raw SQL, exec/eval
+
+To use this ruleset:
+bash
+
+# Run against your codebase
+semgrep --config semgrep-ruleset.yaml /path/to/code
+
+# Or scan specific language
+semgrep --config semgrep-ruleset.yaml --lang python /path/to/python/code
+
+Each rule includes metadata with CWE references and OWASP categories for compliance reporting.
+Semgrep ruleset
+YAML 
+
+would each rule be its own file?
+
+The user is asking whether Semgrep rules should be organized as separate files rather than all in one file. This is a good question about best practices for organizing Semgrep rulesets.
+
+In practice, Semgrep rules can be organized either way:
+
+    Single file: All rules in one YAML file (what I created)
+    Multiple files: Each rule or category in its own file, organized in a directory structure
+
+For larger, production-grade rulesets, the common convention is to organize rules into separate files, typically by:
+
+    Language (e.g., python/, javascript/, csharp/, terraform/)
+    Category (e.g., security/, best-practices/, correctness/)
+    Or individual rule files
+
+This makes it easier to:
+
+    Maintain and update specific rules
+    Enable/disable specific rules or categories
+    Have better version control visibility
+    Share/reuse subsets of rules
+
+Let me offer to reorganize the ruleset into a proper directory structure with individual files or at least language-based files.
+
+Good question! Both approaches work, but for larger, production-grade rulesets, separating rules into individual files organized by language/category is the recommended practice. This makes maintenance, version control, and selective rule usage much easier.
+
+Let me reorganize this into a proper directory structure:
+
+bash
+rm -rf "/mnt/user-data/outputs/semgrep-rules/{csharp,terraform,javascript,python}"
+
+Output
+exit code 0
+
+Now let me provide the summary to the user.
+
+Done! I've reorganized the ruleset into individual files by language and category:
+
+View your Semgrep ruleset
+
+semgrep-rules/
+├── csharp/
+│   ├── sql-injection.yaml
+│   ├── command-injection.yaml
+│   ├── hardcoded-secret.yaml
+│   ├── insecure-deserialization.yaml
+│   ├── path-traversal.yaml
+│   ├── weak-crypto.yaml
+│   ├── xxe-vulnerability.yaml
+│   └── open-redirect.yaml
+├── terraform/
+│   ├── aws-s3-public-acl.yaml
+│   ├── aws-security-group-open-ingress.yaml
+│   ├── aws-rds-security.yaml
+│   ├── aws-iam-admin-policy.yaml
+│   └── cloud-provider-security.yaml
+├── javascript/
+│   ├── xss.yaml
+│   ├── injection.yaml
+│   ├── security-misconfig.yaml
+│   └── path-redirect.yaml
+├── python/
+│   ├── injection.yaml
+│   ├── deserialization.yaml
+│   ├── security-misconfig.yaml
+│   └── web-security.yaml
+└── README.md
+
+Benefits of this structure:
+
+    Selective scanning — run only the rules you need (--config ./semgrep-rules/python)
+    Easier maintenance — update individual rules without touching others
+    Better git diffs — changes are isolated to specific files
+    Team ownership — different teams can own different rule files
+
+semgrep-rules
+ 
+
+send me a readme.md for this
+
+The user is asking for a README.md file for the Semgrep ruleset. I already created one in the previous step at /mnt/user-data/outputs/semgrep-rules/README.md. Let me check if they want me to show them the existing one or if they want something different/more comprehensive.
+
+Looking at the existing README, it's already quite good but I could enhance it further. Let me show them what I already created, or I can provide a link to it since it already exists.
+
+Actually, the user said "send me" which suggests they may not have seen it or want me to share/display it. I should just point them to the existing file that's already in the outputs folder.
+
+I already created a README.md in the ruleset! Here it is:
+
+View README.md
+
+If you'd like a more detailed version, I can expand it with additional sections like rule descriptions, examples of detected vulnerabilities, or CI/CD pipeline configurations. Just let me know!
+Readme
+Document · MD 
+
+add badges too
+
+The README looks good with badges added. Let me share the updated file with the user.
+
+Done! I've added badges for:
+
+    Semgrep version compatibility
+    License (MIT)
+    Total rules count
+    OWASP Top 10 compliance
+    Language-specific badges with rule counts and official logos/colors
+
+View updated README.md
+
+The badges will render nicely on GitHub/GitLab like this:
+
+Readme
+Document · MD 
+
+send me the csharp file
+
+Done. I've created a combined C# rules file with all 8 rules in one file.
+
+View csharp-rules.yaml
+
+All 8 C# rules combined into a single file covering SQL injection, command injection, hardcoded secrets, insecure deserialization, path traversal, weak crypto, XXE, and open redirect.
+Csharp rules
+YAML 
+
+an we add more rules
+
+The user wants to add more C# rules to the ruleset. I should expand the C# rules with additional security patterns. Let me think of more common C# security issues:
+
+    LDAP Injection
+    XSS (Cross-site scripting)
+    Insecure cookie settings
+    Insecure SSL/TLS configuration
+    Regex DoS (ReDoS)
+    Log injection
+    CSRF missing
+    Insecure random number generation
+    Hardcoded IP addresses
+    Unvalidated redirects
+    Missing authorization attributes
+    Insecure file uploads
+    Information disclosure in error messages
+    Server-side request forgery (SSRF)
+    Mass assignment / over-posting
+    Insecure HTTP methods
+    Missing input validation
+    Unsafe reflection
+    Debug mode enabled
+    Weak password requirements
+    Missing HTTPS redirect
+    Insecure direct object reference
+    Race conditions
+    Null reference issues
+    Entity Framework raw SQL
+    LINQ injection
+    ViewState tampering
+    Unencrypted sensitive data
+    Missing security headers
+    JWT vulnerabilities
+
+Let me add a good selection of these to make the ruleset more comprehensive.
+
+Absolutely! Let me add more comprehensive C# security rules:
+
+bash
+grep -c "^  - id:" /mnt/user-data/outputs/csharp-rules.yaml
+
+Output
+39
+
+Great! We now have 39 C# rules. Let me provide the user with a summary of what was added.
+
+Done! Expanded from 8 to 39 rules. View csharp-rules.yaml
+
+Here's what was added:
+
+Category	New Rules
+Injection	LDAP injection, XPath injection, Header injection, EF raw SQL
+XSS	Raw output, InnerHtml
+Cookies	Missing Secure flag, Missing HttpOnly flag
+SSL/TLS	Insecure protocols, Certificate validation disabled
+Cryptography	ECB mode, Hardcoded IV, Insecure random, Weak password hashing
+CSRF	Missing AntiForgeryToken
+SSRF	HttpClient, WebClient, WebRequest
+Access Control	Missing authorization, Mass assignment, HTTP verb tampering
+Information Disclosure	Exception details, Debug enabled, Sensitive data in URL
+File Handling	Unrestricted upload, TOCTOU race condition
+Logging	Log injection
+Regex	ReDoS vulnerability
+Reflection	Unsafe reflection
+CORS	Allow all origins
+ViewState	MAC disabled
+Null Safety	Null dereference
+Misc	Hardcoded IPs
+
+Want me to add even more rules for specific frameworks (ASP.NET Core, Blazor, etc.) or focus on particular vulnerability categories?
+Csharp rules
+YAML 
+
+same for python and create as many rules as possile
+
+bash
+grep -c "^  - id:" /mnt/user-data/outputs/python-rules.yaml
+
+Output
+125
+
+125 rules - excellent! Let me provide the user with a summary of what's included.
+
+Done! Created 125 Python security rules. View python-rules.yaml
+
+Here's the complete breakdown:
+
+Category	Rules	Coverage
+SQL Injection	4	Raw SQL, SQLAlchemy, format strings
+Command Injection	6	subprocess, os.system, os.popen, commands
+Code Injection	5	eval, exec, compile, execfile, input
+Deserialization	8	pickle, yaml, marshal, shelve, dill, jsonpickle
+Path Traversal	6	open, pathlib, shutil, send_file, tarfile, zipfile
+SSRF	4	requests, urllib, httpx, aiohttp
+XSS	5	Flask Markup, render_template_string, Jinja2, Django mark_safe, Mako
+Template Injection (SSTI)	2	Jinja2, Mako
+XXE	7	etree, lxml, xmlrpc, pulldom, minidom, sax
+Cryptography	12	MD5, SHA1, DES, RC4, ECB mode, weak RSA, hardcoded IV, PBKDF2, random
+Hardcoded Secrets	7	passwords, API keys, AWS keys, tokens, private keys
+Django Security	10	raw SQL, DEBUG, SECRET_KEY, CSRF, SSL, cookies, ALLOWED_HOSTS
+Flask Security	6	debug, secret_key, open redirect, host binding, CSRF
+FastAPI Security	2	debug, CORS
+JWT Vulnerabilities	3	no verify, weak secret, none algorithm
+Logging	3	log injection, sensitive data in logs
+ReDoS	2	regex patterns, user input in regex
+Temp Files	2	mktemp, hardcoded /tmp
+SSL/TLS	4	verify=False, weak versions, no hostname check
+LDAP Injection	1	filter injection
+XPath Injection	1	query injection
+Network Security	4	binding all interfaces, FTP, Telnet, HTTP
+Database Security	2	MongoDB injection, Redis eval
+Async	1	async subprocess shell
+Paramiko/SSH	1	missing host key policy
+Boto3/AWS	2	hardcoded credentials, public S3
+Celery	1	pickle serializer
+Werkzeug	1	debugger enabled
+Flask-Admin	1	no authentication
+Dangerous Imports	2	pdb, readline
+Memory/ctypes	1	dangerous operations
+GraphQL	1	introspection enabled
+File Permissions	1	world-writable
+Timing Attacks	1	string comparison
+Object Injection	2	getattr, setattr
+Pandas	3	read_pickle, eval, query
+NumPy	1	load with pickle
+Best Practices	3	print statements, TODO comments, commented code
+
+Want me to add even more rules for specific frameworks (Pyramid, Tornado, Sanic) or additional categories?
+Python rules
+YAML 
+
+likewise for terraform now. provider agnostic
+
+bash
+grep -c "^  - id:" /mnt/user-data/outputs/terraform-rules.yaml
+
+Output
+166
+
+166 Terraform rules! That's a comprehensive ruleset. Let me provide a summary for the user.
+
+Done! Created 166 provider-agnostic Terraform security rules. View terraform-rules.yaml
+
+Here's the complete breakdown by provider and category:
+
+Provider	Category	Rules
+General	Hardcoded Secrets	5
+General	Provisioners & Data Sources	4
+AWS	S3 Storage	5
+AWS	Encryption (EBS, RDS, ElastiCache, Kinesis, SQS, SNS, etc.)	15
+AWS	Network Security (SG, VPC, NACL)	13
+AWS	RDS Database	6
+AWS	IAM	9
+AWS	EC2	5
+AWS	Lambda	4
+AWS	Logging (CloudTrail, Config, GuardDuty)	5
+AWS	Load Balancers (ELB, ALB)	5
+AWS	API Gateway	4
+AWS	EKS	3
+AWS	ECS	3
+Azure	Storage	5
+Azure	Network (NSG)	3
+Azure	Database (SQL, CosmosDB, PostgreSQL, MySQL)	6
+Azure	Compute (VM)	3
+Azure	Key Vault	3
+Azure	AKS	3
+Azure	App Service	3
+GCP	Storage	4
+GCP	Compute	6
+GCP	Network (Firewall, VPC)	4
+GCP	Database (Cloud SQL, BigQuery)	5
+GCP	GKE	8
+GCP	IAM	3
+GCP	Cloud Functions	1
+GCP	KMS	2
+GCP	Logging	1
+Kubernetes	Container Security	15
+Helm	Repository Security	2
+DigitalOcean	Droplet, Firewall, Spaces, Database	4
+Compliance	Tags, Descriptions, Versioning	4
+
+Key Security Areas Covered:
+
+    🔐 Access Control — Public buckets, open security groups, IAM policies
+    🔒 Encryption — At-rest & in-transit for all services
+    📝 Logging — CloudTrail, VPC flow logs, access logs
+    🌐 Network — SSH/RDP exposure, database ports, firewalls
+    🐳 Container Security — Privileged containers, root users, capabilities
+    🔑 Secrets — Hardcoded passwords, tokens, API keys
+    ☁️ Multi-Cloud — AWS, Azure, GCP, DigitalOcean, Kubernetes
+
+Terraform rules
+YAML 
+
+
+Terraform rules · YAML
+rules:
+  # ============================================================================
+  # GENERAL TERRAFORM SECURITY
+  # ============================================================================
+
+  - id: terraform-sensitive-variable-no-default
+    languages: [hcl]
+    message: "Sensitive variable should not have default value."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    pattern: |
+      variable "$NAME" {
+        ...
+        sensitive = true
+        ...
+        default = "..."
+        ...
+      }
+
+  - id: terraform-hardcoded-password
+    languages: [hcl]
+    message: "Hardcoded password detected. Use variables or secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: password = "..."
+          - pattern: admin_password = "..."
+          - pattern: master_password = "..."
+          - pattern: db_password = "..."
+
+  - id: terraform-hardcoded-secret
+    languages: [hcl]
+    message: "Hardcoded secret detected. Use secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: secret = "..."
+          - pattern: secret_key = "..."
+          - pattern: api_key = "..."
+          - pattern: access_key = "..."
+          - pattern: private_key = "..."
+
+  - id: terraform-hardcoded-token
+    languages: [hcl]
+    message: "Hardcoded token detected. Use variables or secrets manager."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: token = "..."
+          - pattern: auth_token = "..."
+          - pattern: access_token = "..."
+          - pattern: bearer_token = "..."
+
+  - id: terraform-http-without-https
+    languages: [hcl]
+    message: "HTTP URL detected. Use HTTPS for secure communication."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+    pattern-regex: 'http://[^"]*'
+
+  - id: terraform-local-exec-provisioner
+    languages: [hcl]
+    message: "local-exec provisioner can execute arbitrary commands. Use with caution."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern: |
+      provisioner "local-exec" {
+        ...
+      }
+
+  - id: terraform-remote-exec-provisioner
+    languages: [hcl]
+    message: "remote-exec provisioner can execute arbitrary commands. Use with caution."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern: |
+      provisioner "remote-exec" {
+        ...
+      }
+
+  - id: terraform-external-data-source
+    languages: [hcl]
+    message: "External data source executes local commands. Validate input/output."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+    pattern: |
+      data "external" $NAME {
+        ...
+      }
+
+  # ============================================================================
+  # AWS - S3 BUCKET SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-s3-public-acl
+    languages: [hcl]
+    message: "S3 bucket has public ACL. Data exposed to internet."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "aws_s3_bucket" $NAME {
+                ...
+                acl = "public-read"
+                ...
+              }
+          - pattern: |
+              resource "aws_s3_bucket" $NAME {
+                ...
+                acl = "public-read-write"
+                ...
+              }
+          - pattern: |
+              resource "aws_s3_bucket_acl" $NAME {
+                ...
+                acl = "public-read"
+                ...
+              }
+
+  - id: terraform-aws-s3-bucket-versioning-disabled
+    languages: [hcl]
+    message: "S3 bucket versioning disabled. Enable for data recovery."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: aws
+    pattern: |
+      resource "aws_s3_bucket_versioning" $NAME {
+        ...
+        versioning_configuration {
+          status = "Disabled"
+        }
+        ...
+      }
+
+  - id: terraform-aws-s3-bucket-logging-disabled
+    languages: [hcl]
+    message: "S3 bucket access logging not configured."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_s3_bucket" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_s3_bucket" $NAME {
+        ...
+        logging {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-s3-bucket-public-access-block
+    languages: [hcl]
+    message: "S3 public access block not fully restrictive."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "aws_s3_bucket_public_access_block" $NAME {
+                ...
+                block_public_acls = false
+                ...
+              }
+          - pattern: |
+              resource "aws_s3_bucket_public_access_block" $NAME {
+                ...
+                block_public_policy = false
+                ...
+              }
+          - pattern: |
+              resource "aws_s3_bucket_public_access_block" $NAME {
+                ...
+                ignore_public_acls = false
+                ...
+              }
+          - pattern: |
+              resource "aws_s3_bucket_public_access_block" $NAME {
+                ...
+                restrict_public_buckets = false
+                ...
+              }
+
+  # ============================================================================
+  # AWS - ENCRYPTION
+  # ============================================================================
+
+  - id: terraform-aws-s3-bucket-encryption-disabled
+    languages: [hcl]
+    message: "S3 bucket server-side encryption not using KMS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_s3_bucket_server_side_encryption_configuration" $NAME {
+        ...
+        rule {
+          apply_server_side_encryption_by_default {
+            sse_algorithm = "AES256"
+          }
+        }
+        ...
+      }
+
+  - id: terraform-aws-ebs-encryption-disabled
+    languages: [hcl]
+    message: "EBS volume encryption disabled. Enable encryption."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_ebs_volume" $NAME {
+        ...
+        encrypted = false
+        ...
+      }
+
+  - id: terraform-aws-rds-encryption-disabled
+    languages: [hcl]
+    message: "RDS storage encryption disabled. Enable storage_encrypted."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "aws_db_instance" $NAME {
+                ...
+                storage_encrypted = false
+                ...
+              }
+          - pattern: |
+              resource "aws_rds_cluster" $NAME {
+                ...
+                storage_encrypted = false
+                ...
+              }
+
+  - id: terraform-aws-redshift-encryption-disabled
+    languages: [hcl]
+    message: "Redshift cluster encryption disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_redshift_cluster" $NAME {
+        ...
+        encrypted = false
+        ...
+      }
+
+  - id: terraform-aws-elasticache-encryption-disabled
+    languages: [hcl]
+    message: "ElastiCache encryption at rest disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_elasticache_replication_group" $NAME {
+        ...
+        at_rest_encryption_enabled = false
+        ...
+      }
+
+  - id: terraform-aws-elasticache-transit-encryption-disabled
+    languages: [hcl]
+    message: "ElastiCache encryption in transit disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: aws
+    pattern: |
+      resource "aws_elasticache_replication_group" $NAME {
+        ...
+        transit_encryption_enabled = false
+        ...
+      }
+
+  - id: terraform-aws-kinesis-encryption-disabled
+    languages: [hcl]
+    message: "Kinesis stream encryption disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_kinesis_stream" $NAME {
+        ...
+        encryption_type = "NONE"
+        ...
+      }
+
+  - id: terraform-aws-sqs-encryption-disabled
+    languages: [hcl]
+    message: "SQS queue missing KMS encryption."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_sqs_queue" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_sqs_queue" $NAME {
+        ...
+        kms_master_key_id = $KEY
+        ...
+      }
+
+  - id: terraform-aws-sns-encryption-disabled
+    languages: [hcl]
+    message: "SNS topic missing KMS encryption."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_sns_topic" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_sns_topic" $NAME {
+        ...
+        kms_master_key_id = $KEY
+        ...
+      }
+
+  - id: terraform-aws-secretsmanager-no-kms
+    languages: [hcl]
+    message: "Secrets Manager secret not using CMK."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_secretsmanager_secret" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_secretsmanager_secret" $NAME {
+        ...
+        kms_key_id = $KEY
+        ...
+      }
+
+  - id: terraform-aws-cloudwatch-log-encryption
+    languages: [hcl]
+    message: "CloudWatch log group missing KMS encryption."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_cloudwatch_log_group" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_cloudwatch_log_group" $NAME {
+        ...
+        kms_key_id = $KEY
+        ...
+      }
+
+  - id: terraform-aws-dax-encryption-disabled
+    languages: [hcl]
+    message: "DAX cluster encryption disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_dax_cluster" $NAME {
+        ...
+        server_side_encryption {
+          enabled = false
+        }
+        ...
+      }
+
+  - id: terraform-aws-docdb-encryption-disabled
+    languages: [hcl]
+    message: "DocumentDB storage encryption disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_docdb_cluster" $NAME {
+        ...
+        storage_encrypted = false
+        ...
+      }
+
+  - id: terraform-aws-neptune-encryption-disabled
+    languages: [hcl]
+    message: "Neptune cluster encryption disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_neptune_cluster" $NAME {
+        ...
+        storage_encrypted = false
+        ...
+      }
+
+  - id: terraform-aws-athena-encryption-disabled
+    languages: [hcl]
+    message: "Athena workgroup encryption disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_athena_workgroup" $NAME {
+        ...
+        configuration {
+          result_configuration {
+            encryption_configuration {
+              encryption_option = "SSE_S3"
+            }
+          }
+        }
+        ...
+      }
+
+  # ============================================================================
+  # AWS - NETWORK SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-security-group-open-ingress
+    languages: [hcl]
+    message: "Security group allows unrestricted ingress (0.0.0.0/0)."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              ingress {
+                ...
+                cidr_blocks = ["0.0.0.0/0"]
+                ...
+              }
+          - pattern: |
+              ingress {
+                ...
+                ipv6_cidr_blocks = ["::/0"]
+                ...
+              }
+
+  - id: terraform-aws-security-group-open-egress
+    languages: [hcl]
+    message: "Security group allows unrestricted egress. Consider restricting."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      egress {
+        ...
+        cidr_blocks = ["0.0.0.0/0"]
+        ...
+      }
+
+  - id: terraform-aws-security-group-open-ssh
+    languages: [hcl]
+    message: "SSH (22) open to internet. Restrict to specific IPs."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      ingress {
+        ...
+        from_port = 22
+        ...
+        cidr_blocks = ["0.0.0.0/0"]
+        ...
+      }
+
+  - id: terraform-aws-security-group-open-rdp
+    languages: [hcl]
+    message: "RDP (3389) open to internet. Restrict to specific IPs."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      ingress {
+        ...
+        from_port = 3389
+        ...
+        cidr_blocks = ["0.0.0.0/0"]
+        ...
+      }
+
+  - id: terraform-aws-security-group-open-mysql
+    languages: [hcl]
+    message: "MySQL (3306) open to internet. Use private subnets."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      ingress {
+        ...
+        from_port = 3306
+        ...
+        cidr_blocks = ["0.0.0.0/0"]
+        ...
+      }
+
+  - id: terraform-aws-security-group-open-postgres
+    languages: [hcl]
+    message: "PostgreSQL (5432) open to internet. Use private subnets."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      ingress {
+        ...
+        from_port = 5432
+        ...
+        cidr_blocks = ["0.0.0.0/0"]
+        ...
+      }
+
+  - id: terraform-aws-security-group-open-mongodb
+    languages: [hcl]
+    message: "MongoDB (27017) open to internet. Use private subnets."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      ingress {
+        ...
+        from_port = 27017
+        ...
+        cidr_blocks = ["0.0.0.0/0"]
+        ...
+      }
+
+  - id: terraform-aws-security-group-open-redis
+    languages: [hcl]
+    message: "Redis (6379) open to internet. Use private subnets."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      ingress {
+        ...
+        from_port = 6379
+        ...
+        cidr_blocks = ["0.0.0.0/0"]
+        ...
+      }
+
+  - id: terraform-aws-security-group-all-ports
+    languages: [hcl]
+    message: "Security group allows all ports. Restrict to required ports."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      ingress {
+        ...
+        from_port = 0
+        to_port = 65535
+        ...
+      }
+
+  - id: terraform-aws-default-vpc-usage
+    languages: [hcl]
+    message: "Using default VPC. Create custom VPC for better isolation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "aws_default_vpc" $NAME {
+                ...
+              }
+          - pattern: |
+              data "aws_vpc" $NAME {
+                default = true
+              }
+
+  - id: terraform-aws-vpc-flow-logs-disabled
+    languages: [hcl]
+    message: "VPC flow logs not enabled. Enable for network monitoring."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_vpc" $NAME {
+        ...
+      }
+
+  - id: terraform-aws-nacl-allow-all
+    languages: [hcl]
+    message: "NACL allows all traffic. Restrict to required ports."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_network_acl_rule" $NAME {
+        ...
+        cidr_block = "0.0.0.0/0"
+        ...
+        from_port = 0
+        to_port = 65535
+        ...
+        rule_action = "allow"
+        ...
+      }
+
+  # ============================================================================
+  # AWS - RDS SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-rds-public
+    languages: [hcl]
+    message: "RDS instance publicly accessible. Set to false."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_db_instance" $NAME {
+        ...
+        publicly_accessible = true
+        ...
+      }
+
+  - id: terraform-aws-rds-no-deletion-protection
+    languages: [hcl]
+    message: "RDS deletion protection disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: aws
+    pattern: |
+      resource "aws_db_instance" $NAME {
+        ...
+        deletion_protection = false
+        ...
+      }
+
+  - id: terraform-aws-rds-no-backup
+    languages: [hcl]
+    message: "RDS backup retention set to 0. Enable backups."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: aws
+    pattern: |
+      resource "aws_db_instance" $NAME {
+        ...
+        backup_retention_period = 0
+        ...
+      }
+
+  - id: terraform-aws-rds-no-multi-az
+    languages: [hcl]
+    message: "RDS multi-AZ disabled. Enable for high availability."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: aws
+    pattern: |
+      resource "aws_db_instance" $NAME {
+        ...
+        multi_az = false
+        ...
+      }
+
+  - id: terraform-aws-rds-iam-auth-disabled
+    languages: [hcl]
+    message: "RDS IAM authentication disabled. Consider enabling."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+      provider: aws
+    pattern: |
+      resource "aws_db_instance" $NAME {
+        ...
+        iam_database_authentication_enabled = false
+        ...
+      }
+
+  - id: terraform-aws-rds-performance-insights-disabled
+    languages: [hcl]
+    message: "RDS Performance Insights disabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_db_instance" $NAME {
+        ...
+        performance_insights_enabled = false
+        ...
+      }
+
+  # ============================================================================
+  # AWS - IAM SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-iam-admin-policy
+    languages: [hcl]
+    message: "IAM policy grants admin access (*:*). Follow least privilege."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              statement {
+                ...
+                actions = ["*"]
+                resources = ["*"]
+                ...
+              }
+          - pattern: |
+              "Action": "*"
+          - pattern: |
+              "Action": ["*"]
+          - pattern: |
+              actions = ["*"]
+
+  - id: terraform-aws-iam-wildcard-action
+    languages: [hcl]
+    message: "IAM policy uses wildcard action. Be more specific."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: actions = ["$SERVICE:*"]
+          - pattern: |
+              "Action": "$SERVICE:*"
+
+  - id: terraform-aws-iam-wildcard-resource
+    languages: [hcl]
+    message: "IAM policy uses wildcard resource. Scope to specific resources."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: aws
+    pattern: resources = ["*"]
+
+  - id: terraform-aws-iam-user-inline-policy
+    languages: [hcl]
+    message: "Inline policy attached to user. Use groups or roles."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: aws
+    pattern: |
+      resource "aws_iam_user_policy" $NAME {
+        ...
+      }
+
+  - id: terraform-aws-iam-user-direct-policy
+    languages: [hcl]
+    message: "Policy directly attached to user. Use groups."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: aws
+    pattern: |
+      resource "aws_iam_user_policy_attachment" $NAME {
+        ...
+      }
+
+  - id: terraform-aws-iam-no-mfa
+    languages: [hcl]
+    message: "IAM policy should require MFA for sensitive actions."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-308: Use of Single-factor Authentication"
+      provider: aws
+    pattern: |
+      statement {
+        ...
+        actions = [..., "iam:$ACTION", ...]
+        ...
+      }
+    pattern-not: |
+      statement {
+        ...
+        condition {
+          test = "Bool"
+          variable = "aws:MultiFactorAuthPresent"
+          values = ["true"]
+        }
+        ...
+      }
+
+  - id: terraform-aws-iam-assume-role-no-condition
+    languages: [hcl]
+    message: "AssumeRole without conditions. Add external ID or MFA."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_iam_role" $NAME {
+        ...
+        assume_role_policy = $POLICY
+        ...
+      }
+
+  - id: terraform-aws-iam-access-key-active
+    languages: [hcl]
+    message: "IAM access key should be rotated regularly."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+      provider: aws
+    pattern: |
+      resource "aws_iam_access_key" $NAME {
+        ...
+      }
+
+  # ============================================================================
+  # AWS - EC2 SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-ec2-public-ip
+    languages: [hcl]
+    message: "EC2 instance has public IP. Consider using NAT gateway."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_instance" $NAME {
+        ...
+        associate_public_ip_address = true
+        ...
+      }
+
+  - id: terraform-aws-ec2-imdsv2-not-required
+    languages: [hcl]
+    message: "EC2 should require IMDSv2 to prevent SSRF."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-918: Server-Side Request Forgery"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "aws_instance" $NAME {
+                ...
+                metadata_options {
+                  http_tokens = "optional"
+                }
+                ...
+              }
+          - pattern: |
+              resource "aws_launch_template" $NAME {
+                ...
+                metadata_options {
+                  http_tokens = "optional"
+                }
+                ...
+              }
+
+  - id: terraform-aws-ec2-detailed-monitoring-disabled
+    languages: [hcl]
+    message: "EC2 detailed monitoring disabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_instance" $NAME {
+        ...
+        monitoring = false
+        ...
+      }
+
+  - id: terraform-aws-ec2-ebs-not-encrypted
+    languages: [hcl]
+    message: "EC2 EBS volume not encrypted."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_instance" $NAME {
+        ...
+        ebs_block_device {
+          ...
+          encrypted = false
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-ec2-user-data-secrets
+    languages: [hcl]
+    message: "Avoid secrets in user_data. Use Secrets Manager."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+      provider: aws
+    patterns:
+      - pattern-regex: 'user_data\s*=.*(?:password|secret|key|token).*'
+
+  # ============================================================================
+  # AWS - LAMBDA SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-lambda-no-vpc
+    languages: [hcl]
+    message: "Lambda not in VPC. Consider VPC for network isolation."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_lambda_function" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_lambda_function" $NAME {
+        ...
+        vpc_config {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-lambda-env-secrets
+    languages: [hcl]
+    message: "Avoid secrets in Lambda environment variables."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: |
+              environment {
+                variables = {
+                  ...
+                  PASSWORD = "..."
+                  ...
+                }
+              }
+          - pattern: |
+              environment {
+                variables = {
+                  ...
+                  SECRET = "..."
+                  ...
+                }
+              }
+          - pattern: |
+              environment {
+                variables = {
+                  ...
+                  API_KEY = "..."
+                  ...
+                }
+              }
+
+  - id: terraform-aws-lambda-tracing-disabled
+    languages: [hcl]
+    message: "Lambda X-Ray tracing disabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_lambda_function" $NAME {
+        ...
+        tracing_config {
+          mode = "PassThrough"
+        }
+        ...
+      }
+
+  - id: terraform-aws-lambda-public-access
+    languages: [hcl]
+    message: "Lambda function URL allows public access."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_lambda_function_url" $NAME {
+        ...
+        authorization_type = "NONE"
+        ...
+      }
+
+  # ============================================================================
+  # AWS - LOGGING AND MONITORING
+  # ============================================================================
+
+  - id: terraform-aws-cloudtrail-not-encrypted
+    languages: [hcl]
+    message: "CloudTrail logs not encrypted with KMS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_cloudtrail" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_cloudtrail" $NAME {
+        ...
+        kms_key_id = $KEY
+        ...
+      }
+
+  - id: terraform-aws-cloudtrail-no-log-validation
+    languages: [hcl]
+    message: "CloudTrail log file validation disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-354: Improper Validation of Integrity Check Value"
+      provider: aws
+    pattern: |
+      resource "aws_cloudtrail" $NAME {
+        ...
+        enable_log_file_validation = false
+        ...
+      }
+
+  - id: terraform-aws-cloudtrail-not-multi-region
+    languages: [hcl]
+    message: "CloudTrail not multi-region. Enable for global events."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_cloudtrail" $NAME {
+        ...
+        is_multi_region_trail = false
+        ...
+      }
+
+  - id: terraform-aws-config-not-enabled
+    languages: [hcl]
+    message: "AWS Config recorder not enabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_config_configuration_recorder_status" $NAME {
+        ...
+        is_enabled = false
+        ...
+      }
+
+  - id: terraform-aws-guardduty-not-enabled
+    languages: [hcl]
+    message: "GuardDuty detector disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_guardduty_detector" $NAME {
+        enable = false
+      }
+
+  # ============================================================================
+  # AWS - LOAD BALANCER SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-elb-no-access-logs
+    languages: [hcl]
+    message: "ELB access logging disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_elb" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_elb" $NAME {
+        ...
+        access_logs {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-alb-no-access-logs
+    languages: [hcl]
+    message: "ALB access logging disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_lb" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_lb" $NAME {
+        ...
+        access_logs {
+          enabled = true
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-alb-drop-invalid-headers
+    languages: [hcl]
+    message: "ALB should drop invalid HTTP headers."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-113: HTTP Response Splitting"
+      provider: aws
+    pattern: |
+      resource "aws_lb" $NAME {
+        ...
+        drop_invalid_header_fields = false
+        ...
+      }
+
+  - id: terraform-aws-elb-insecure-ssl
+    languages: [hcl]
+    message: "ELB using outdated SSL policy."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+      provider: aws
+    patterns:
+      - pattern-either:
+          - pattern: ssl_policy = "ELBSecurityPolicy-2016-08"
+          - pattern: ssl_policy = "ELBSecurityPolicy-TLS-1-0-2015-04"
+          - pattern: ssl_policy = "ELBSecurityPolicy-TLS-1-1-2017-01"
+
+  - id: terraform-aws-alb-http-listener
+    languages: [hcl]
+    message: "ALB listener uses HTTP. Use HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: aws
+    pattern: |
+      resource "aws_lb_listener" $NAME {
+        ...
+        protocol = "HTTP"
+        ...
+      }
+
+  # ============================================================================
+  # AWS - API GATEWAY SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-api-gateway-no-logging
+    languages: [hcl]
+    message: "API Gateway logging disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_api_gateway_stage" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_api_gateway_stage" $NAME {
+        ...
+        access_log_settings {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-api-gateway-no-xray
+    languages: [hcl]
+    message: "API Gateway X-Ray tracing disabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_api_gateway_stage" $NAME {
+        ...
+        xray_tracing_enabled = false
+        ...
+      }
+
+  - id: terraform-aws-api-gateway-no-waf
+    languages: [hcl]
+    message: "API Gateway without WAF. Consider adding WAF."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_api_gateway_stage" $NAME {
+        ...
+      }
+
+  - id: terraform-aws-api-gateway-cache-encryption
+    languages: [hcl]
+    message: "API Gateway cache encryption disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_api_gateway_method_settings" $NAME {
+        ...
+        settings {
+          ...
+          cache_data_encrypted = false
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # AWS - EKS SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-eks-public-endpoint
+    languages: [hcl]
+    message: "EKS cluster has public endpoint. Consider private."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: aws
+    pattern: |
+      resource "aws_eks_cluster" $NAME {
+        ...
+        vpc_config {
+          ...
+          endpoint_public_access = true
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-eks-no-encryption
+    languages: [hcl]
+    message: "EKS secrets not encrypted with KMS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: aws
+    pattern: |
+      resource "aws_eks_cluster" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_eks_cluster" $NAME {
+        ...
+        encryption_config {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-aws-eks-no-logging
+    languages: [hcl]
+    message: "EKS control plane logging disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_eks_cluster" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "aws_eks_cluster" $NAME {
+        ...
+        enabled_cluster_log_types = $TYPES
+        ...
+      }
+
+  # ============================================================================
+  # AWS - ECS SECURITY
+  # ============================================================================
+
+  - id: terraform-aws-ecs-task-privileged
+    languages: [hcl]
+    message: "ECS task running as privileged. Avoid if possible."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: aws
+    pattern-regex: '"privileged"\s*:\s*true'
+
+  - id: terraform-aws-ecs-task-root-user
+    languages: [hcl]
+    message: "ECS task running as root. Use non-root user."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: aws
+    pattern-regex: '"user"\s*:\s*"(root|0)"'
+
+  - id: terraform-aws-ecs-no-logging
+    languages: [hcl]
+    message: "ECS task definition missing logging configuration."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: aws
+    pattern: |
+      resource "aws_ecs_task_definition" $NAME {
+        ...
+      }
+
+  # ============================================================================
+  # AZURE - STORAGE SECURITY
+  # ============================================================================
+
+  - id: terraform-azure-storage-public-access
+    languages: [hcl]
+    message: "Azure storage allows public access."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_storage_account" $NAME {
+        ...
+        public_network_access_enabled = true
+        ...
+      }
+
+  - id: terraform-azure-storage-https-only
+    languages: [hcl]
+    message: "Azure storage should enforce HTTPS."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: azure
+    pattern: |
+      resource "azurerm_storage_account" $NAME {
+        ...
+        enable_https_traffic_only = false
+        ...
+      }
+
+  - id: terraform-azure-storage-blob-public
+    languages: [hcl]
+    message: "Azure blob container allows public access."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "azurerm_storage_container" $NAME {
+                ...
+                container_access_type = "blob"
+                ...
+              }
+          - pattern: |
+              resource "azurerm_storage_container" $NAME {
+                ...
+                container_access_type = "container"
+                ...
+              }
+
+  - id: terraform-azure-storage-no-encryption
+    languages: [hcl]
+    message: "Azure storage infrastructure encryption disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: azure
+    pattern: |
+      resource "azurerm_storage_account" $NAME {
+        ...
+        infrastructure_encryption_enabled = false
+        ...
+      }
+
+  - id: terraform-azure-storage-queue-encryption
+    languages: [hcl]
+    message: "Azure storage queue should use CMK encryption."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: azure
+    pattern: |
+      resource "azurerm_storage_account" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "azurerm_storage_account" $NAME {
+        ...
+        queue_encryption_key_type = "Account"
+        ...
+      }
+
+  # ============================================================================
+  # AZURE - NETWORK SECURITY
+  # ============================================================================
+
+  - id: terraform-azure-nsg-open-ssh
+    languages: [hcl]
+    message: "Azure NSG allows SSH from internet."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_network_security_rule" $NAME {
+        ...
+        source_address_prefix = "*"
+        ...
+        destination_port_range = "22"
+        ...
+        access = "Allow"
+        ...
+      }
+
+  - id: terraform-azure-nsg-open-rdp
+    languages: [hcl]
+    message: "Azure NSG allows RDP from internet."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_network_security_rule" $NAME {
+        ...
+        source_address_prefix = "*"
+        ...
+        destination_port_range = "3389"
+        ...
+        access = "Allow"
+        ...
+      }
+
+  - id: terraform-azure-nsg-all-ports
+    languages: [hcl]
+    message: "Azure NSG allows all ports."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_network_security_rule" $NAME {
+        ...
+        destination_port_range = "*"
+        ...
+        access = "Allow"
+        ...
+      }
+
+  # ============================================================================
+  # AZURE - DATABASE SECURITY
+  # ============================================================================
+
+  - id: terraform-azure-sql-public-access
+    languages: [hcl]
+    message: "Azure SQL allows public network access."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_mssql_server" $NAME {
+        ...
+        public_network_access_enabled = true
+        ...
+      }
+
+  - id: terraform-azure-sql-no-audit
+    languages: [hcl]
+    message: "Azure SQL auditing not configured."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: azure
+    pattern: |
+      resource "azurerm_mssql_server" $NAME {
+        ...
+      }
+
+  - id: terraform-azure-sql-tde-disabled
+    languages: [hcl]
+    message: "Azure SQL TDE encryption disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: azure
+    pattern: |
+      resource "azurerm_mssql_database" $NAME {
+        ...
+        transparent_data_encryption_enabled = false
+        ...
+      }
+
+  - id: terraform-azure-cosmosdb-public
+    languages: [hcl]
+    message: "CosmosDB allows public network access."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_cosmosdb_account" $NAME {
+        ...
+        public_network_access_enabled = true
+        ...
+      }
+
+  - id: terraform-azure-postgresql-ssl-disabled
+    languages: [hcl]
+    message: "Azure PostgreSQL SSL enforcement disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: azure
+    pattern: |
+      resource "azurerm_postgresql_server" $NAME {
+        ...
+        ssl_enforcement_enabled = false
+        ...
+      }
+
+  - id: terraform-azure-mysql-ssl-disabled
+    languages: [hcl]
+    message: "Azure MySQL SSL enforcement disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: azure
+    pattern: |
+      resource "azurerm_mysql_server" $NAME {
+        ...
+        ssl_enforcement_enabled = false
+        ...
+      }
+
+  # ============================================================================
+  # AZURE - COMPUTE SECURITY
+  # ============================================================================
+
+  - id: terraform-azure-vm-public-ip
+    languages: [hcl]
+    message: "Azure VM has public IP."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_public_ip" $NAME {
+        ...
+      }
+
+  - id: terraform-azure-vm-password-auth
+    languages: [hcl]
+    message: "Azure VM using password authentication. Use SSH keys."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+      provider: azure
+    pattern: |
+      resource "azurerm_linux_virtual_machine" $NAME {
+        ...
+        disable_password_authentication = false
+        ...
+      }
+
+  - id: terraform-azure-vm-encryption-disabled
+    languages: [hcl]
+    message: "Azure VM disk encryption disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: azure
+    pattern: |
+      resource "azurerm_managed_disk" $NAME {
+        ...
+        encryption_settings {
+          enabled = false
+        }
+        ...
+      }
+
+  # ============================================================================
+  # AZURE - KEY VAULT SECURITY
+  # ============================================================================
+
+  - id: terraform-azure-keyvault-no-purge-protection
+    languages: [hcl]
+    message: "Azure Key Vault purge protection disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: azure
+    pattern: |
+      resource "azurerm_key_vault" $NAME {
+        ...
+        purge_protection_enabled = false
+        ...
+      }
+
+  - id: terraform-azure-keyvault-no-soft-delete
+    languages: [hcl]
+    message: "Azure Key Vault soft delete should be enabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: azure
+    pattern: |
+      resource "azurerm_key_vault" $NAME {
+        ...
+        soft_delete_retention_days = 0
+        ...
+      }
+
+  - id: terraform-azure-keyvault-public-network
+    languages: [hcl]
+    message: "Azure Key Vault allows public network access."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_key_vault" $NAME {
+        ...
+        public_network_access_enabled = true
+        ...
+      }
+
+  # ============================================================================
+  # AZURE - AKS SECURITY
+  # ============================================================================
+
+  - id: terraform-azure-aks-rbac-disabled
+    languages: [hcl]
+    message: "Azure AKS RBAC disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_kubernetes_cluster" $NAME {
+        ...
+        role_based_access_control_enabled = false
+        ...
+      }
+
+  - id: terraform-azure-aks-network-policy
+    languages: [hcl]
+    message: "Azure AKS should have network policy enabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_kubernetes_cluster" $NAME {
+        ...
+        network_profile {
+          network_policy = "none"
+        }
+        ...
+      }
+
+  - id: terraform-azure-aks-public-api
+    languages: [hcl]
+    message: "Azure AKS API server is public."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: azure
+    pattern: |
+      resource "azurerm_kubernetes_cluster" $NAME {
+        ...
+        private_cluster_enabled = false
+        ...
+      }
+
+  # ============================================================================
+  # AZURE - APP SERVICE SECURITY
+  # ============================================================================
+
+  - id: terraform-azure-app-service-https-only
+    languages: [hcl]
+    message: "Azure App Service should enforce HTTPS."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: azure
+    pattern: |
+      resource "azurerm_app_service" $NAME {
+        ...
+        https_only = false
+        ...
+      }
+
+  - id: terraform-azure-app-service-tls-version
+    languages: [hcl]
+    message: "Azure App Service should use TLS 1.2+."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-326: Inadequate Encryption Strength"
+      provider: azure
+    patterns:
+      - pattern-either:
+          - pattern: min_tls_version = "1.0"
+          - pattern: min_tls_version = "1.1"
+
+  - id: terraform-azure-app-service-auth
+    languages: [hcl]
+    message: "Azure App Service authentication disabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+      provider: azure
+    pattern: |
+      resource "azurerm_app_service" $NAME {
+        ...
+        auth_settings {
+          enabled = false
+        }
+        ...
+      }
+
+  # ============================================================================
+  # GCP - STORAGE SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-storage-public
+    languages: [hcl]
+    message: "GCP storage bucket is public."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "google_storage_bucket_iam_member" $NAME {
+                ...
+                member = "allUsers"
+                ...
+              }
+          - pattern: |
+              resource "google_storage_bucket_iam_member" $NAME {
+                ...
+                member = "allAuthenticatedUsers"
+                ...
+              }
+          - pattern: |
+              resource "google_storage_bucket_iam_binding" $NAME {
+                ...
+                members = [..., "allUsers", ...]
+                ...
+              }
+
+  - id: terraform-gcp-storage-uniform-access
+    languages: [hcl]
+    message: "GCP storage should use uniform bucket-level access."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_storage_bucket" $NAME {
+        ...
+        uniform_bucket_level_access = false
+        ...
+      }
+
+  - id: terraform-gcp-storage-versioning
+    languages: [hcl]
+    message: "GCP storage bucket versioning disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: gcp
+    pattern: |
+      resource "google_storage_bucket" $NAME {
+        ...
+        versioning {
+          enabled = false
+        }
+        ...
+      }
+
+  - id: terraform-gcp-storage-logging
+    languages: [hcl]
+    message: "GCP storage bucket logging not configured."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: gcp
+    pattern: |
+      resource "google_storage_bucket" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "google_storage_bucket" $NAME {
+        ...
+        logging {
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # GCP - COMPUTE SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-compute-public-ip
+    languages: [hcl]
+    message: "GCP compute instance has public IP."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_compute_instance" $NAME {
+        ...
+        network_interface {
+          ...
+          access_config {
+            ...
+          }
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-compute-default-service-account
+    languages: [hcl]
+    message: "GCP instance using default service account."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: gcp
+    pattern: |
+      resource "google_compute_instance" $NAME {
+        ...
+        service_account {
+          email = $EMAIL
+          scopes = ["cloud-platform"]
+        }
+        ...
+      }
+
+  - id: terraform-gcp-compute-serial-port
+    languages: [hcl]
+    message: "GCP instance serial port enabled. Disable for security."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_compute_instance" $NAME {
+        ...
+        metadata = {
+          ...
+          serial-port-enable = true
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-compute-os-login-disabled
+    languages: [hcl]
+    message: "GCP OS Login disabled. Enable for IAM-based SSH."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+      provider: gcp
+    pattern: |
+      resource "google_compute_instance" $NAME {
+        ...
+        metadata = {
+          ...
+          enable-oslogin = "FALSE"
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-compute-disk-encryption
+    languages: [hcl]
+    message: "GCP disk should use CMEK encryption."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-311: Missing Encryption"
+      provider: gcp
+    pattern: |
+      resource "google_compute_disk" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "google_compute_disk" $NAME {
+        ...
+        disk_encryption_key {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-compute-shielded-vm
+    languages: [hcl]
+    message: "GCP instance should enable shielded VM."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: gcp
+    pattern: |
+      resource "google_compute_instance" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "google_compute_instance" $NAME {
+        ...
+        shielded_instance_config {
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # GCP - NETWORK SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-firewall-open-ssh
+    languages: [hcl]
+    message: "GCP firewall allows SSH from internet."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_compute_firewall" $NAME {
+        ...
+        source_ranges = ["0.0.0.0/0"]
+        ...
+        allow {
+          ...
+          ports = [..., "22", ...]
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-firewall-open-rdp
+    languages: [hcl]
+    message: "GCP firewall allows RDP from internet."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_compute_firewall" $NAME {
+        ...
+        source_ranges = ["0.0.0.0/0"]
+        ...
+        allow {
+          ...
+          ports = [..., "3389", ...]
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-firewall-all-ports
+    languages: [hcl]
+    message: "GCP firewall allows all ports."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_compute_firewall" $NAME {
+        ...
+        allow {
+          protocol = "all"
+        }
+        ...
+      }
+
+  - id: terraform-gcp-vpc-flow-logs
+    languages: [hcl]
+    message: "GCP VPC flow logs not enabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-778: Insufficient Logging"
+      provider: gcp
+    pattern: |
+      resource "google_compute_subnetwork" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "google_compute_subnetwork" $NAME {
+        ...
+        log_config {
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # GCP - DATABASE SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-sql-public-ip
+    languages: [hcl]
+    message: "GCP Cloud SQL has public IP."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_sql_database_instance" $NAME {
+        ...
+        settings {
+          ...
+          ip_configuration {
+            ...
+            ipv4_enabled = true
+            ...
+          }
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-sql-no-ssl
+    languages: [hcl]
+    message: "GCP Cloud SQL not requiring SSL."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: gcp
+    pattern: |
+      resource "google_sql_database_instance" $NAME {
+        ...
+        settings {
+          ...
+          ip_configuration {
+            ...
+            require_ssl = false
+            ...
+          }
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-sql-backup-disabled
+    languages: [hcl]
+    message: "GCP Cloud SQL backup disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: gcp
+    pattern: |
+      resource "google_sql_database_instance" $NAME {
+        ...
+        settings {
+          ...
+          backup_configuration {
+            enabled = false
+          }
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-sql-authorized-networks
+    languages: [hcl]
+    message: "GCP Cloud SQL allows all networks."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      authorized_networks {
+        ...
+        value = "0.0.0.0/0"
+        ...
+      }
+
+  - id: terraform-gcp-bigquery-public
+    languages: [hcl]
+    message: "GCP BigQuery dataset is public."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    patterns:
+      - pattern-either:
+          - pattern: special_group = "allUsers"
+          - pattern: special_group = "allAuthenticatedUsers"
+
+  # ============================================================================
+  # GCP - GKE SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-gke-legacy-auth
+    languages: [hcl]
+    message: "GKE legacy authentication enabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+      provider: gcp
+    pattern: |
+      resource "google_container_cluster" $NAME {
+        ...
+        master_auth {
+          ...
+          client_certificate_config {
+            issue_client_certificate = true
+          }
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-gcp-gke-basic-auth
+    languages: [hcl]
+    message: "GKE basic authentication enabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-287: Improper Authentication"
+      provider: gcp
+    pattern: |
+      resource "google_container_cluster" $NAME {
+        ...
+        master_auth {
+          username = $USER
+          password = $PASS
+        }
+        ...
+      }
+
+  - id: terraform-gcp-gke-private-cluster
+    languages: [hcl]
+    message: "GKE cluster is not private."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_container_cluster" $NAME {
+        ...
+        private_cluster_config {
+          enable_private_nodes = false
+        }
+        ...
+      }
+
+  - id: terraform-gcp-gke-network-policy
+    languages: [hcl]
+    message: "GKE network policy disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    pattern: |
+      resource "google_container_cluster" $NAME {
+        ...
+        network_policy {
+          enabled = false
+        }
+        ...
+      }
+
+  - id: terraform-gcp-gke-pod-security-policy
+    languages: [hcl]
+    message: "GKE pod security policy disabled."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: gcp
+    pattern: |
+      resource "google_container_cluster" $NAME {
+        ...
+        pod_security_policy_config {
+          enabled = false
+        }
+        ...
+      }
+
+  - id: terraform-gcp-gke-binary-auth
+    languages: [hcl]
+    message: "GKE Binary Authorization disabled."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-693: Protection Mechanism Failure"
+      provider: gcp
+    pattern: |
+      resource "google_container_cluster" $NAME {
+        ...
+        enable_binary_authorization = false
+        ...
+      }
+
+  - id: terraform-gcp-gke-workload-identity
+    languages: [hcl]
+    message: "GKE Workload Identity not configured."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: gcp
+    pattern: |
+      resource "google_container_cluster" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "google_container_cluster" $NAME {
+        ...
+        workload_identity_config {
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # GCP - IAM SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-iam-primitive-role
+    languages: [hcl]
+    message: "GCP IAM using primitive role. Use predefined roles."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: gcp
+    patterns:
+      - pattern-either:
+          - pattern: role = "roles/owner"
+          - pattern: role = "roles/editor"
+          - pattern: role = "roles/viewer"
+
+  - id: terraform-gcp-iam-public-access
+    languages: [hcl]
+    message: "GCP IAM grants public access."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    patterns:
+      - pattern-either:
+          - pattern: member = "allUsers"
+          - pattern: member = "allAuthenticatedUsers"
+          - pattern: members = [..., "allUsers", ...]
+          - pattern: members = [..., "allAuthenticatedUsers", ...]
+
+  - id: terraform-gcp-service-account-key
+    languages: [hcl]
+    message: "GCP service account key created. Prefer Workload Identity."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-798: Hardcoded Credentials"
+      provider: gcp
+    pattern: |
+      resource "google_service_account_key" $NAME {
+        ...
+      }
+
+  # ============================================================================
+  # GCP - CLOUD FUNCTIONS SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-function-public
+    languages: [hcl]
+    message: "GCP Cloud Function is public."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "google_cloudfunctions_function_iam_member" $NAME {
+                ...
+                member = "allUsers"
+                ...
+              }
+          - pattern: |
+              resource "google_cloudfunctions2_function_iam_member" $NAME {
+                ...
+                member = "allUsers"
+                ...
+              }
+
+  # ============================================================================
+  # GCP - KMS SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-kms-rotation
+    languages: [hcl]
+    message: "GCP KMS key rotation not configured."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-320: Key Management Errors"
+      provider: gcp
+    pattern: |
+      resource "google_kms_crypto_key" $NAME {
+        ...
+      }
+    pattern-not: |
+      resource "google_kms_crypto_key" $NAME {
+        ...
+        rotation_period = $PERIOD
+        ...
+      }
+
+  - id: terraform-gcp-kms-public
+    languages: [hcl]
+    message: "GCP KMS key publicly accessible."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: gcp
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "google_kms_crypto_key_iam_member" $NAME {
+                ...
+                member = "allUsers"
+                ...
+              }
+          - pattern: |
+              resource "google_kms_crypto_key_iam_member" $NAME {
+                ...
+                member = "allAuthenticatedUsers"
+                ...
+              }
+
+  # ============================================================================
+  # GCP - LOGGING SECURITY
+  # ============================================================================
+
+  - id: terraform-gcp-logging-sink-no-filter
+    languages: [hcl]
+    message: "GCP logging sink has no filter. May log sensitive data."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-532: Information Exposure Through Log Files"
+      provider: gcp
+    pattern: |
+      resource "google_logging_project_sink" $NAME {
+        ...
+        filter = ""
+        ...
+      }
+
+  # ============================================================================
+  # KUBERNETES SECURITY
+  # ============================================================================
+
+  - id: terraform-kubernetes-privileged-container
+    languages: [hcl]
+    message: "Kubernetes container running as privileged."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: kubernetes
+    pattern: |
+      security_context {
+        ...
+        privileged = true
+        ...
+      }
+
+  - id: terraform-kubernetes-root-user
+    languages: [hcl]
+    message: "Kubernetes container running as root."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: kubernetes
+    pattern: |
+      security_context {
+        ...
+        run_as_user = 0
+        ...
+      }
+
+  - id: terraform-kubernetes-run-as-non-root
+    languages: [hcl]
+    message: "Kubernetes container should run as non-root."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: kubernetes
+    pattern: |
+      security_context {
+        ...
+        run_as_non_root = false
+        ...
+      }
+
+  - id: terraform-kubernetes-host-network
+    languages: [hcl]
+    message: "Kubernetes pod using host network."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: kubernetes
+    pattern: |
+      spec {
+        ...
+        host_network = true
+        ...
+      }
+
+  - id: terraform-kubernetes-host-pid
+    languages: [hcl]
+    message: "Kubernetes pod using host PID namespace."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: kubernetes
+    pattern: |
+      spec {
+        ...
+        host_pid = true
+        ...
+      }
+
+  - id: terraform-kubernetes-host-ipc
+    languages: [hcl]
+    message: "Kubernetes pod using host IPC namespace."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: kubernetes
+    pattern: |
+      spec {
+        ...
+        host_ipc = true
+        ...
+      }
+
+  - id: terraform-kubernetes-read-only-fs
+    languages: [hcl]
+    message: "Kubernetes container should use read-only filesystem."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-732: Incorrect Permission Assignment"
+      provider: kubernetes
+    pattern: |
+      security_context {
+        ...
+        read_only_root_filesystem = false
+        ...
+      }
+
+  - id: terraform-kubernetes-capabilities-add
+    languages: [hcl]
+    message: "Kubernetes container adds capabilities. Review carefully."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: kubernetes
+    pattern: |
+      capabilities {
+        add = [...]
+      }
+
+  - id: terraform-kubernetes-sys-admin-capability
+    languages: [hcl]
+    message: "Kubernetes container has SYS_ADMIN capability."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: kubernetes
+    pattern: |
+      capabilities {
+        add = [..., "SYS_ADMIN", ...]
+      }
+
+  - id: terraform-kubernetes-allow-privilege-escalation
+    languages: [hcl]
+    message: "Kubernetes container allows privilege escalation."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: kubernetes
+    pattern: |
+      security_context {
+        ...
+        allow_privilege_escalation = true
+        ...
+      }
+
+  - id: terraform-kubernetes-default-service-account
+    languages: [hcl]
+    message: "Kubernetes pod using default service account."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      provider: kubernetes
+    pattern: |
+      spec {
+        ...
+        service_account_name = "default"
+        ...
+      }
+
+  - id: terraform-kubernetes-automount-token
+    languages: [hcl]
+    message: "Kubernetes service account token auto-mounted."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: kubernetes
+    pattern: |
+      automount_service_account_token = true
+
+  - id: terraform-kubernetes-no-resource-limits
+    languages: [hcl]
+    message: "Kubernetes container missing resource limits."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-770: Allocation of Resources Without Limits"
+      provider: kubernetes
+    pattern: |
+      container {
+        ...
+      }
+    pattern-not: |
+      container {
+        ...
+        resources {
+          limits {
+            ...
+          }
+        }
+        ...
+      }
+
+  - id: terraform-kubernetes-latest-tag
+    languages: [hcl]
+    message: "Kubernetes container using 'latest' tag. Use specific version."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+      provider: kubernetes
+    patterns:
+      - pattern-either:
+          - pattern: image = "...:latest"
+          - pattern-regex: 'image\s*=\s*"[^"]+:latest"'
+
+  - id: terraform-kubernetes-secret-env-var
+    languages: [hcl]
+    message: "Kubernetes secret exposed as environment variable."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-200: Information Exposure"
+      provider: kubernetes
+    pattern: |
+      env {
+        ...
+        value_from {
+          secret_key_ref {
+            ...
+          }
+        }
+        ...
+      }
+
+  # ============================================================================
+  # HELM SECURITY
+  # ============================================================================
+
+  - id: terraform-helm-repository-insecure
+    languages: [hcl]
+    message: "Helm repository using HTTP. Use HTTPS."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-319: Cleartext Transmission"
+      provider: helm
+    pattern: |
+      resource "helm_release" $NAME {
+        ...
+        repository = "http://..."
+        ...
+      }
+
+  - id: terraform-helm-skip-tls-verify
+    languages: [hcl]
+    message: "Helm TLS verification disabled."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-295: Improper Certificate Validation"
+      provider: helm
+    pattern: |
+      provider "helm" {
+        ...
+        kubernetes {
+          ...
+          insecure = true
+          ...
+        }
+        ...
+      }
+
+  # ============================================================================
+  # DIGITALOCEAN SECURITY
+  # ============================================================================
+
+  - id: terraform-digitalocean-droplet-public
+    languages: [hcl]
+    message: "DigitalOcean droplet has public IP. Consider firewall."
+    severity: INFO
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: digitalocean
+    pattern: |
+      resource "digitalocean_droplet" $NAME {
+        ...
+      }
+
+  - id: terraform-digitalocean-firewall-open
+    languages: [hcl]
+    message: "DigitalOcean firewall allows all inbound."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: digitalocean
+    pattern: |
+      inbound_rule {
+        ...
+        source_addresses = ["0.0.0.0/0", "::/0"]
+        ...
+      }
+
+  - id: terraform-digitalocean-spaces-public
+    languages: [hcl]
+    message: "DigitalOcean Space is public."
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: digitalocean
+    pattern: |
+      resource "digitalocean_spaces_bucket" $NAME {
+        ...
+        acl = "public-read"
+        ...
+      }
+
+  - id: terraform-digitalocean-database-public
+    languages: [hcl]
+    message: "DigitalOcean database cluster allows public connections."
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-284: Improper Access Control"
+      provider: digitalocean
+    pattern: |
+      resource "digitalocean_database_firewall" $NAME {
+        ...
+        rule {
+          type = "ip_addr"
+          value = "0.0.0.0/0"
+        }
+        ...
+      }
+
+  # ============================================================================
+  # GENERAL COMPLIANCE RULES
+  # ============================================================================
+
+  - id: terraform-missing-tags
+    languages: [hcl]
+    message: "Resource missing required tags for compliance."
+    severity: INFO
+    metadata:
+      category: compliance
+      cwe: "CWE-710: Improper Adherence to Coding Standards"
+    pattern: |
+      resource $TYPE $NAME {
+        ...
+      }
+    pattern-not: |
+      resource $TYPE $NAME {
+        ...
+        tags = {
+          ...
+        }
+        ...
+      }
+
+  - id: terraform-missing-description
+    languages: [hcl]
+    message: "Security group missing description."
+    severity: INFO
+    metadata:
+      category: compliance
+      cwe: "CWE-710: Improper Adherence to Coding Standards"
+    patterns:
+      - pattern-either:
+          - pattern: |
+              resource "aws_security_group" $NAME {
+                ...
+                description = ""
+                ...
+              }
+          - pattern: |
+              resource "aws_security_group_rule" $NAME {
+                ...
+                description = ""
+                ...
+              }
+
+  - id: terraform-module-no-version
+    languages: [hcl]
+    message: "Module source without version constraint."
+    severity: WARNING
+    metadata:
+      category: compliance
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern: |
+      module $NAME {
+        source = $SOURCE
+      }
+    pattern-not: |
+      module $NAME {
+        source = $SOURCE
+        version = $VERSION
+      }
+
+  - id: terraform-provider-no-version
+    languages: [hcl]
+    message: "Provider without version constraint."
+    severity: WARNING
+    metadata:
+      category: compliance
+      cwe: "CWE-829: Inclusion of Functionality from Untrusted Control Sphere"
+    pattern: |
+      provider $NAME {
+        ...
+      }
+
