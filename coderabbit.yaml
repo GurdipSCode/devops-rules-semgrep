@@ -1,0 +1,40 @@
+# .coderabbit.yaml
+language: "en-US"
+
+reviews:
+  # Enable or disable reviews
+  enabled: true
+  # Review profile: chill, default, strict, or assertive
+  profile: "default"
+  # Request changes workflow
+  request_changes_workflow: false
+  # High-level summary in PR description
+  high_level_summary: true
+  # Add walkthrough comment
+  poem: false
+  # Review status comment
+  review_status: true
+  # Collapse walkthrough below this many files
+  collapse_walkthrough: 10
+  # Auto-review on push
+  auto_review:
+    enabled: true
+    drafts: false
+
+chat:
+  # Enable or disable chat
+  enabled: true
+  auto_reply: true
+
+# Path-based instructions
+path_instructions:
+  - path: "src/**/*.ts"
+    instructions: "Focus on TypeScript best practices and type safety"
+  - path: "**/*.test.ts"
+    instructions: "Ensure tests are comprehensive and follow testing patterns"
+
+# Files/paths to ignore
+path_filters:
+  - "!**/*.lock"
+  - "!**/dist/**"
+  - "!**/node_modules/**"
