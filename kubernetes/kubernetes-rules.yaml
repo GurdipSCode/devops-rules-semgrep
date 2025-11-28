@@ -1,0 +1,1241 @@
+rules:
+  # ============================================================================
+  # CONTAINER SECURITY CONTEXT RULES
+  # ============================================================================
+
+  - id: k8s-privileged-container
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          securityContext:
+            ...
+            privileged: true
+    message: >-
+      Container is running in privileged mode. This grants the container nearly
+      all capabilities of the host, which is a significant security risk.
+      Remove 'privileged: true' or set it to false.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+      owasp: "A6:2017 Security Misconfiguration"
+      references:
+        - https://kubernetes.io/docs/concepts/security/pod-security-standards/
+
+  - id: k8s-run-as-root
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          securityContext:
+            ...
+            runAsUser: 0
+    message: >-
+      Container is configured to run as root (UID 0). Running as root inside
+      a container increases the risk of container escape. Set runAsUser to a
+      non-zero value.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+
+  - id: k8s-run-as-non-root-not-set
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Pod|Deployment|StatefulSet|DaemonSet|ReplicaSet|Job|CronJob)$
+      - pattern: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          containers:
+            - name: $NAME
+              ...
+              securityContext:
+                ...
+                runAsNonRoot: true
+      - pattern-not-inside: |
+          spec:
+            ...
+            securityContext:
+              ...
+              runAsNonRoot: true
+    message: >-
+      Container '$NAME' does not have 'runAsNonRoot: true' set. This could
+      allow the container to run as root. Add 'runAsNonRoot: true' to the
+      container or pod securityContext.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-allow-privilege-escalation
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          securityContext:
+            ...
+            allowPrivilegeEscalation: true
+    message: >-
+      Container allows privilege escalation. This could allow a process to
+      gain more privileges than its parent. Set 'allowPrivilegeEscalation: false'.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-269: Improper Privilege Management"
+
+  - id: k8s-read-only-root-filesystem-not-set
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          containers:
+            - name: $NAME
+              ...
+              securityContext:
+                ...
+                readOnlyRootFilesystem: true
+    message: >-
+      Container '$NAME' does not have a read-only root filesystem. Setting
+      'readOnlyRootFilesystem: true' prevents attackers from writing to the
+      container filesystem.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  # ============================================================================
+  # CAPABILITIES RULES
+  # ============================================================================
+
+  - id: k8s-added-capabilities
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          securityContext:
+            ...
+            capabilities:
+              ...
+              add:
+                - $CAP
+    message: >-
+      Container adds Linux capability '$CAP'. Adding capabilities increases
+      the attack surface. Review if this capability is necessary and consider
+      removing it.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+
+  - id: k8s-dangerous-capabilities
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          securityContext:
+            ...
+            capabilities:
+              ...
+              add:
+                - $CAP
+      - metavariable-regex:
+          metavariable: $CAP
+          regex: ^(SYS_ADMIN|SYS_PTRACE|SYS_MODULE|DAC_OVERRIDE|NET_ADMIN|NET_RAW|SYS_RAWIO|ALL)$
+    message: >-
+      Container adds dangerous Linux capability '$CAP'. This capability can
+      be used to escape the container or compromise the host. Remove this
+      capability unless absolutely necessary.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+
+  - id: k8s-capabilities-not-dropped
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          containers:
+            - name: $NAME
+              ...
+              securityContext:
+                ...
+                capabilities:
+                  ...
+                  drop:
+                    - ...
+    message: >-
+      Container '$NAME' does not drop any capabilities. Consider dropping
+      all capabilities with 'drop: ["ALL"]' and only adding back those
+      that are required.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  # ============================================================================
+  # RESOURCE LIMITS RULES
+  # ============================================================================
+
+  - id: k8s-missing-resource-limits
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          containers:
+            - name: $NAME
+              ...
+              resources:
+                ...
+                limits:
+                  ...
+    message: >-
+      Container '$NAME' does not have resource limits defined. Without limits,
+      a container could consume all available resources on the node. Define
+      CPU and memory limits.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-770: Allocation of Resources Without Limits or Throttling"
+
+  - id: k8s-missing-resource-requests
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          containers:
+            - name: $NAME
+              ...
+              resources:
+                ...
+                requests:
+                  ...
+    message: >-
+      Container '$NAME' does not have resource requests defined. Without
+      requests, the scheduler cannot make optimal placement decisions.
+      Define CPU and memory requests.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-missing-memory-limit
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern: |
+          resources:
+            ...
+            limits:
+              ...
+      - pattern-not-inside: |
+          resources:
+            ...
+            limits:
+              ...
+              memory: $MEM
+    message: >-
+      Container '$NAME' has resource limits but no memory limit. Without a
+      memory limit, the container could cause OOM issues on the node.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-missing-cpu-limit
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern: |
+          resources:
+            ...
+            limits:
+              ...
+      - pattern-not-inside: |
+          resources:
+            ...
+            limits:
+              ...
+              cpu: $CPU
+    message: >-
+      Container '$NAME' has resource limits but no CPU limit. Without a CPU
+      limit, the container could starve other workloads of CPU resources.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # IMAGE SECURITY RULES
+  # ============================================================================
+
+  - id: k8s-image-tag-latest
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          image: $IMAGE
+      - metavariable-regex:
+          metavariable: $IMAGE
+          regex: .*:latest$
+    message: >-
+      Container uses the 'latest' image tag. This makes deployments
+      non-deterministic and can lead to unexpected behavior. Use a specific
+      version tag instead.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-image-no-tag
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          image: $IMAGE
+      - metavariable-regex:
+          metavariable: $IMAGE
+          regex: ^[^:@]+$
+    message: >-
+      Container image '$IMAGE' has no tag specified. This defaults to 'latest'
+      which makes deployments non-deterministic. Specify an explicit version tag.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-image-pull-policy-always
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern-not: |
+          imagePullPolicy: Always
+      - pattern: |
+          imagePullPolicy: $POLICY
+      - metavariable-regex:
+          metavariable: $POLICY
+          regex: ^(Never|IfNotPresent)$
+      - pattern-inside: |
+          image: $IMAGE
+          ...
+      - metavariable-regex:
+          metavariable: $IMAGE
+          regex: .*:latest$
+    message: >-
+      Container uses 'latest' tag but imagePullPolicy is not 'Always'. This
+      could result in running stale images. Set imagePullPolicy to 'Always'
+      or use a specific image tag.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # NETWORK SECURITY RULES
+  # ============================================================================
+
+  - id: k8s-host-network
+    patterns:
+      - pattern: |
+          spec:
+            ...
+            hostNetwork: true
+    message: >-
+      Pod uses the host network namespace. This gives the pod access to the
+      host's network interfaces and can be used for network sniffing or
+      spoofing. Remove 'hostNetwork: true' unless absolutely necessary.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-668: Exposure of Resource to Wrong Sphere"
+
+  - id: k8s-host-pid
+    patterns:
+      - pattern: |
+          spec:
+            ...
+            hostPID: true
+    message: >-
+      Pod uses the host PID namespace. This allows the pod to see and
+      potentially interact with all processes on the host. Remove 'hostPID: true'.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-host-ipc
+    patterns:
+      - pattern: |
+          spec:
+            ...
+            hostIPC: true
+    message: >-
+      Pod uses the host IPC namespace. This allows the pod to access host
+      shared memory. Remove 'hostIPC: true' unless necessary.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-service-external-ip
+    patterns:
+      - pattern-inside: |
+          kind: Service
+          ...
+      - pattern: |
+          spec:
+            ...
+            externalIPs:
+              - $IP
+    message: >-
+      Service specifies externalIPs. This can be a security risk as it
+      exposes the service directly. Consider using LoadBalancer or Ingress
+      instead.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-service-nodeport
+    patterns:
+      - pattern-inside: |
+          kind: Service
+          ...
+      - pattern: |
+          spec:
+            ...
+            type: NodePort
+    message: >-
+      Service uses NodePort which exposes the service on every node. Consider
+      using LoadBalancer or Ingress for production workloads for better
+      security and load distribution.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # SECRETS AND SENSITIVE DATA RULES
+  # ============================================================================
+
+  - id: k8s-secret-env-var
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          env:
+            - name: $NAME
+              value: $VALUE
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|secret|key|token|api.?key|credential|auth).*
+    message: >-
+      Environment variable '$NAME' appears to contain sensitive data in plain
+      text. Use Kubernetes Secrets with secretKeyRef instead of hardcoding
+      sensitive values.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-312: Cleartext Storage of Sensitive Information"
+
+  - id: k8s-hardcoded-secret
+    patterns:
+      - pattern-inside: |
+          kind: Secret
+          ...
+      - pattern: |
+          stringData:
+            ...
+            $KEY: $VALUE
+    message: >-
+      Secret contains hardcoded string data for '$KEY'. Consider using external
+      secret management solutions like HashiCorp Vault, AWS Secrets Manager,
+      or sealed-secrets to avoid storing secrets in manifests.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-configmap-sensitive-data
+    patterns:
+      - pattern-inside: |
+          kind: ConfigMap
+          ...
+      - pattern: |
+          data:
+            ...
+            $KEY: $VALUE
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: (?i).*(password|secret|key|token|credential|auth|private).*
+    message: >-
+      ConfigMap key '$KEY' suggests sensitive data. ConfigMaps are not encrypted.
+      Use Kubernetes Secrets for sensitive information.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-312: Cleartext Storage of Sensitive Information"
+
+  # ============================================================================
+  # HOST PATH AND VOLUME RULES
+  # ============================================================================
+
+  - id: k8s-hostpath-volume
+    patterns:
+      - pattern: |
+          volumes:
+            - ...
+              hostPath:
+                path: $PATH
+    message: >-
+      Pod mounts a hostPath volume '$PATH'. This gives the pod access to the
+      host filesystem which is a security risk. Use PersistentVolumes or
+      emptyDir instead.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-668: Exposure of Resource to Wrong Sphere"
+
+  - id: k8s-hostpath-sensitive-paths
+    patterns:
+      - pattern: |
+          volumes:
+            - ...
+              hostPath:
+                path: $PATH
+      - metavariable-regex:
+          metavariable: $PATH
+          regex: ^(/|/etc|/var|/root|/home|/proc|/sys|/dev|/var/run/docker.sock).*
+    message: >-
+      Pod mounts sensitive host path '$PATH'. Mounting system directories or
+      the Docker socket gives the container dangerous access to the host.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-668: Exposure of Resource to Wrong Sphere"
+
+  - id: k8s-docker-socket-mount
+    patterns:
+      - pattern: |
+          volumes:
+            - ...
+              hostPath:
+                path: /var/run/docker.sock
+    message: >-
+      Pod mounts the Docker socket. This effectively gives the container root
+      access to the host. Remove this mount unless absolutely necessary
+      (e.g., for CI/CD tools).
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-250: Execution with Unnecessary Privileges"
+
+  # ============================================================================
+  # RBAC RULES
+  # ============================================================================
+
+  - id: k8s-rbac-wildcard-resources
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Role|ClusterRole)$
+      - pattern: |
+          rules:
+            - ...
+              resources:
+                - "*"
+    message: >-
+      RBAC rule uses wildcard '*' for resources. This grants access to all
+      resources which violates the principle of least privilege. Specify
+      exact resources needed.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-269: Improper Privilege Management"
+
+  - id: k8s-rbac-wildcard-verbs
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Role|ClusterRole)$
+      - pattern: |
+          rules:
+            - ...
+              verbs:
+                - "*"
+    message: >-
+      RBAC rule uses wildcard '*' for verbs. This grants all possible actions
+      which violates the principle of least privilege. Specify exact verbs needed.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-rbac-cluster-admin-binding
+    patterns:
+      - pattern-inside: |
+          kind: ClusterRoleBinding
+          ...
+      - pattern: |
+          roleRef:
+            ...
+            name: cluster-admin
+    message: >-
+      ClusterRoleBinding grants cluster-admin role. This gives full admin
+      access to the entire cluster. Review if this level of access is necessary.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-rbac-secrets-access
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Role|ClusterRole)$
+      - pattern: |
+          rules:
+            - ...
+              resources:
+                - secrets
+              verbs:
+                - $VERB
+      - metavariable-regex:
+          metavariable: $VERB
+          regex: ^(\*|get|list|watch)$
+    message: >-
+      RBAC rule grants '$VERB' access to secrets. Secrets may contain sensitive
+      credentials. Ensure this access is necessary and properly scoped.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-rbac-pod-exec
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Role|ClusterRole)$
+      - pattern: |
+          rules:
+            - ...
+              resources:
+                - pods/exec
+    message: >-
+      RBAC rule grants access to pods/exec. This allows executing commands
+      in containers which can be used for privilege escalation. Review if
+      this access is necessary.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  # ============================================================================
+  # SERVICE ACCOUNT RULES
+  # ============================================================================
+
+  - id: k8s-automount-service-account-token
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Pod|Deployment|StatefulSet|DaemonSet|ReplicaSet|Job|CronJob)$
+      - pattern: |
+          spec:
+            ...
+            automountServiceAccountToken: true
+    message: >-
+      Pod explicitly enables automounting of service account token. Unless
+      the pod needs to access the Kubernetes API, set this to false to reduce
+      attack surface.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-default-service-account
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Pod|Deployment|StatefulSet|DaemonSet|ReplicaSet|Job|CronJob)$
+      - pattern: |
+          spec:
+            ...
+            serviceAccountName: default
+    message: >-
+      Pod uses the 'default' service account. Create a dedicated service
+      account with minimal permissions for each workload.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # POD DISRUPTION AND AVAILABILITY RULES
+  # ============================================================================
+
+  - id: k8s-single-replica-deployment
+    patterns:
+      - pattern-inside: |
+          kind: Deployment
+          ...
+      - pattern: |
+          spec:
+            ...
+            replicas: 1
+    message: >-
+      Deployment has only 1 replica. This creates a single point of failure.
+      Consider increasing replicas for high availability.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-missing-liveness-probe
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          containers:
+            - name: $NAME
+              ...
+              livenessProbe:
+                ...
+    message: >-
+      Container '$NAME' does not have a liveness probe. Liveness probes help
+      Kubernetes detect and restart unhealthy containers.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-missing-readiness-probe
+    patterns:
+      - pattern-inside: |
+          containers:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          containers:
+            - name: $NAME
+              ...
+              readinessProbe:
+                ...
+    message: >-
+      Container '$NAME' does not have a readiness probe. Readiness probes
+      prevent traffic from being sent to containers that aren't ready.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # NAMESPACE AND LABELS RULES
+  # ============================================================================
+
+  - id: k8s-default-namespace
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Pod|Deployment|StatefulSet|DaemonSet|ReplicaSet|Service|ConfigMap|Secret|Job|CronJob)$
+      - pattern: |
+          metadata:
+            ...
+            namespace: default
+    message: >-
+      Resource is deployed to the 'default' namespace. Use dedicated namespaces
+      to isolate workloads and apply namespace-specific policies.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-missing-labels
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(Pod|Deployment|StatefulSet|DaemonSet|Service)$
+      - pattern: |
+          metadata:
+            name: $NAME
+            ...
+      - pattern-not-inside: |
+          metadata:
+            ...
+            labels:
+              ...
+    message: >-
+      Resource '$NAME' does not have labels. Labels help with organization,
+      selection, and management of resources.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # NETWORK POLICY RULES
+  # ============================================================================
+
+  - id: k8s-network-policy-allow-all-ingress
+    patterns:
+      - pattern-inside: |
+          kind: NetworkPolicy
+          ...
+      - pattern: |
+          spec:
+            ...
+            ingress:
+              - {}
+    message: >-
+      NetworkPolicy allows all ingress traffic. This effectively disables
+      network isolation. Specify explicit ingress rules.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-network-policy-allow-all-egress
+    patterns:
+      - pattern-inside: |
+          kind: NetworkPolicy
+          ...
+      - pattern: |
+          spec:
+            ...
+            egress:
+              - {}
+    message: >-
+      NetworkPolicy allows all egress traffic. Consider restricting egress
+      to only required destinations.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  # ============================================================================
+  # INGRESS RULES
+  # ============================================================================
+
+  - id: k8s-ingress-no-tls
+    patterns:
+      - pattern-inside: |
+          kind: Ingress
+          ...
+      - pattern: |
+          spec:
+            rules:
+              - host: $HOST
+                ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            tls:
+              - hosts:
+                  - $HOST
+    message: >-
+      Ingress for host '$HOST' does not configure TLS. Enable TLS to encrypt
+      traffic in transit.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+      cwe: "CWE-319: Cleartext Transmission of Sensitive Information"
+
+  - id: k8s-ingress-wildcard-host
+    patterns:
+      - pattern-inside: |
+          kind: Ingress
+          ...
+      - pattern: |
+          spec:
+            rules:
+              - host: "*"
+    message: >-
+      Ingress uses wildcard host. This could expose the service to unintended
+      traffic. Specify explicit hostnames.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  # ============================================================================
+  # POD SECURITY POLICY / POD SECURITY STANDARDS RULES
+  # ============================================================================
+
+  - id: k8s-selinux-disabled
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          securityContext:
+            ...
+            seLinuxOptions:
+              ...
+              type: spc_t
+    message: >-
+      Container SELinux type is set to 'spc_t' which disables SELinux
+      confinement. Use a more restrictive SELinux type.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-apparmor-unconfined
+    patterns:
+      - pattern: |
+          metadata:
+            ...
+            annotations:
+              ...
+              container.apparmor.security.beta.kubernetes.io/$CONTAINER: unconfined
+    message: >-
+      Container '$CONTAINER' has AppArmor disabled (unconfined). Enable
+      AppArmor with an appropriate profile for defense in depth.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-seccomp-unconfined
+    patterns:
+      - pattern: |
+          securityContext:
+            ...
+            seccompProfile:
+              type: Unconfined
+    message: >-
+      Seccomp profile is set to 'Unconfined'. This disables syscall filtering.
+      Use 'RuntimeDefault' or a custom profile for better security.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  # ============================================================================
+  # CRONJOB SPECIFIC RULES
+  # ============================================================================
+
+  - id: k8s-cronjob-no-concurrency-policy
+    patterns:
+      - pattern-inside: |
+          kind: CronJob
+          ...
+      - pattern: |
+          spec:
+            schedule: $SCHEDULE
+            ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            concurrencyPolicy: $POLICY
+    message: >-
+      CronJob does not specify a concurrencyPolicy. This defaults to 'Allow'
+      which may cause issues if jobs take longer than the schedule interval.
+      Consider setting 'Forbid' or 'Replace'.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-cronjob-no-deadline
+    patterns:
+      - pattern-inside: |
+          kind: CronJob
+          ...
+      - pattern: |
+          spec:
+            schedule: $SCHEDULE
+            ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            startingDeadlineSeconds: $DEADLINE
+    message: >-
+      CronJob does not specify startingDeadlineSeconds. Without this, missed
+      jobs may accumulate and all run at once when the controller recovers.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # DEPRECATED API VERSIONS
+  # ============================================================================
+
+  - id: k8s-deprecated-api-extensions-v1beta1
+    patterns:
+      - pattern: |
+          apiVersion: extensions/v1beta1
+    message: >-
+      API version 'extensions/v1beta1' is deprecated. Migrate to the
+      appropriate stable API version (e.g., apps/v1, networking.k8s.io/v1).
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-deprecated-api-apps-v1beta1
+    patterns:
+      - pattern: |
+          apiVersion: apps/v1beta1
+    message: >-
+      API version 'apps/v1beta1' is deprecated. Use 'apps/v1' instead.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-deprecated-api-apps-v1beta2
+    patterns:
+      - pattern: |
+          apiVersion: apps/v1beta2
+    message: >-
+      API version 'apps/v1beta2' is deprecated. Use 'apps/v1' instead.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-deprecated-api-networking-v1beta1
+    patterns:
+      - pattern: |
+          apiVersion: networking.k8s.io/v1beta1
+    message: >-
+      API version 'networking.k8s.io/v1beta1' is deprecated. Use
+      'networking.k8s.io/v1' instead.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  - id: k8s-deprecated-api-policy-v1beta1
+    patterns:
+      - pattern: |
+          apiVersion: policy/v1beta1
+    message: >-
+      API version 'policy/v1beta1' is deprecated. Use 'policy/v1' instead.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kubernetes]
+
+  # ============================================================================
+  # ADDITIONAL SECURITY RULES
+  # ============================================================================
+
+  - id: k8s-proc-mount
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          securityContext:
+            ...
+            procMount: Unmasked
+    message: >-
+      Container has procMount set to 'Unmasked'. This exposes /proc without
+      masks and can leak sensitive information. Use 'Default' instead.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-unsafe-sysctl
+    patterns:
+      - pattern: |
+          spec:
+            ...
+            securityContext:
+              ...
+              sysctls:
+                - name: $SYSCTL
+      - metavariable-regex:
+          metavariable: $SYSCTL
+          regex: ^(kernel\..+|net\.ipv4\.ip_forward|net\.ipv4\.conf\.all\.forwarding)$
+    message: >-
+      Pod configures unsafe sysctl '$SYSCTL'. Some sysctls can affect node
+      stability or security. Review if this sysctl is necessary.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-shareprocessnamespace
+    patterns:
+      - pattern: |
+          spec:
+            ...
+            shareProcessNamespace: true
+    message: >-
+      Pod enables shared process namespace between containers. This allows
+      containers to see each other's processes and may enable signal injection
+      attacks. Review if this is necessary.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  # ============================================================================
+  # CONTAINER PORT RULES
+  # ============================================================================
+
+  - id: k8s-privileged-ports
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          ports:
+            - containerPort: $PORT
+      - metavariable-comparison:
+          metavariable: $PORT
+          comparison: $PORT < 1024
+    message: >-
+      Container exposes privileged port $PORT (< 1024). Using privileged ports
+      may require additional capabilities. Consider using ports >= 1024.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: security
+      technology: [kubernetes]
+
+  - id: k8s-host-port
+    patterns:
+      - pattern-inside: |
+          containers:
+            - ...
+      - pattern: |
+          ports:
+            - ...
+              hostPort: $PORT
+    message: >-
+      Container uses hostPort $PORT. This reserves the port on the node and
+      limits scheduling flexibility. Use NodePort services or avoid hostPort
+      unless necessary.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kubernetes]
