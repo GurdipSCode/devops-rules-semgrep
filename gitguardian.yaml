@@ -1,0 +1,58 @@
+version: 2
+
+# Paths GitGuardian should scan
+paths:
+  include:
+    - semgrep/
+    - rules/
+    - .semgrep/
+    - semgrep-rules/
+    - src/
+    - scripts/
+    - "*.yaml"
+    - "*.yml"
+
+  exclude:
+    # Common noisy dirs
+    - node_modules/
+    - vendor/
+    - tests/generated/
+    - .git/
+    - dist/
+    - build/
+    # Semgrep test cases often intentionally include "secrets"
+    - tests/
+    - test/
+    - semgrep-tests/
+    - __snapshots__/
+
+# Sensitivity / High-noise filtering
+matches:
+  ignore_known_secrets: true     # Don’t re-flag same secret multiple times
+  ignore_policy_break: false     # Enforce failures in CI if needed
+  ignore_non_production_files: false
+
+# Optional: Override detectors (rarely needed)
+detectors:
+  enabled: []
+  disabled: []
+
+# CI behaviour
+ci:
+  exit_code:
+    no_secrets: 0
+    secrets_found: 1
+    error: 2
+
+  output:
+    format: sarif
+    file: ggshield.sarif
+
+# Quota settings
+scan_mode:
+  precommit: true
+  prepush: true
+  cicd: true
+
+# Display settings
+verbosity: INFO
