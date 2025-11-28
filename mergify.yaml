@@ -1,0 +1,70 @@
+version: 1
+
+# PR review behaviour
+pull_request:
+  auto_review: true
+  review_message: |
+    Thanks for contributing Semgrep rules!  
+    Coderabbit will perform:
+    - YAML validation  
+    - Semgrep ruleset sanity checks  
+    - Coverage of rule metadata  
+    - Suggestions for patterns and message quality
+
+  # When to trigger
+  triggers:
+    - opened
+    - reopened
+    - synchronize
+
+  # How deep the review is
+  suggestions:
+    enabled: true
+    limit: 50    # Reduce noise
+    auto_apply: false
+
+  # Paths to review: focus on semgrep rules
+  include_paths:
+    - semgrep/
+    - rules/
+    - .semgrep/
+    - semgrep-rules/
+
+  exclude_paths:
+    - tests/generated/
+    - vendor/
+    - node_modules/
+
+# Code style for YAML / Semgrep rules files
+rules:
+  yaml:
+    indentation: 2
+    line_width: 120
+    require_document_start: false
+
+# Optional: enforce required metadata for Semgrep rules
+checks:
+  semgrep_rules:
+    required_fields:
+      - id
+      - message
+      - severity
+      - patterns
+    enforce_schema: true
+    severity_values:
+      - INFO
+      - WARNING
+      - ERROR
+
+# Optional: integrate with Semgrep CI output
+ci:
+  semgrep:
+    enabled: true
+    sarif_report: semgrep.sarif    # If your CI publishes SARIF
+    fail_on:
+      severity: ERROR
+      missing_metadata: true
+
+notifications:
+  on_fail: true
+  on_success: false
