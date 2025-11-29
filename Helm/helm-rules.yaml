@@ -1,0 +1,1322 @@
+rules:
+  # ============================================================================
+  # KYVERNO POLICY STRUCTURE RULES
+  # ============================================================================
+
+  - id: kyverno-missing-validation-failure-action
+    patterns:
+      - pattern-inside: |
+          kind: ClusterPolicy
+          ...
+      - pattern: |
+          spec:
+            rules:
+              - ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            validationFailureAction: $ACTION
+    message: >-
+      ClusterPolicy does not specify validationFailureAction. This defaults to
+      'Audit' which only logs violations. Set to 'Enforce' to block non-compliant
+      resources, or explicitly set 'Audit' if that's intended.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+      references:
+        - https://kyverno.io/docs/writing-policies/validate/
+
+  - id: kyverno-policy-missing-validation-failure-action
+    patterns:
+      - pattern-inside: |
+          kind: Policy
+          ...
+      - pattern: |
+          spec:
+            rules:
+              - ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            validationFailureAction: $ACTION
+    message: >-
+      Policy does not specify validationFailureAction. This defaults to 'Audit'
+      which only logs violations. Set to 'Enforce' to block non-compliant
+      resources, or explicitly set 'Audit' if that's intended.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-missing-background-scan
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          spec:
+            rules:
+              - ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            background: $BG
+    message: >-
+      Kyverno policy does not specify 'background' setting. When true (default),
+      policies are applied to existing resources. Set explicitly to document intent.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-background-false-with-validate
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          spec:
+            ...
+            background: false
+            rules:
+              - ...
+                validate:
+                  ...
+    message: >-
+      Policy has background=false with validate rules. Existing non-compliant
+      resources will not be detected. Consider enabling background scanning
+      for validation rules.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # RULE STRUCTURE AND NAMING
+  # ============================================================================
+
+  - id: kyverno-rule-missing-name
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          rules:
+            - match:
+                ...
+      - pattern-not-inside: |
+          rules:
+            - name: $NAME
+              ...
+    message: >-
+      Kyverno rule is missing a name. All rules should have descriptive names
+      for easier debugging and policy reporting.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-rule-missing-match
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          rules:
+            - name: $NAME
+              ...
+      - pattern-not-inside: |
+          rules:
+            - name: $NAME
+              ...
+              match:
+                ...
+    message: >-
+      Kyverno rule '$NAME' is missing a 'match' block. Rules must specify which
+      resources they apply to using match criteria.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-rule-no-action
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          rules:
+            - name: $NAME
+              match:
+                ...
+      - pattern-not-inside: |
+          rules:
+            - name: $NAME
+              ...
+              validate:
+                ...
+      - pattern-not-inside: |
+          rules:
+            - name: $NAME
+              ...
+              mutate:
+                ...
+      - pattern-not-inside: |
+          rules:
+            - name: $NAME
+              ...
+              generate:
+                ...
+      - pattern-not-inside: |
+          rules:
+            - name: $NAME
+              ...
+              verifyImages:
+                ...
+    message: >-
+      Kyverno rule '$NAME' has no action defined. Rules must have at least one
+      of: validate, mutate, generate, or verifyImages.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # MATCH/EXCLUDE RULES
+  # ============================================================================
+
+  - id: kyverno-match-all-resources
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          match:
+            any:
+              - resources:
+                  kinds:
+                    - "*"
+    message: >-
+      Kyverno rule matches all resource kinds with '*'. This is very broad and
+      may cause performance issues or unintended matches. Specify explicit
+      resource kinds.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: performance
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-match-all-namespaces
+    patterns:
+      - pattern-inside: |
+          kind: ClusterPolicy
+          ...
+      - pattern: |
+          match:
+            any:
+              - resources:
+                  ...
+      - pattern-not-inside: |
+          match:
+            any:
+              - resources:
+                  ...
+                  namespaces:
+                    - ...
+      - pattern-not-inside: |
+          match:
+            any:
+              - resources:
+                  ...
+                  namespaceSelector:
+                    ...
+    message: >-
+      ClusterPolicy rule matches resources in all namespaces. Consider scoping
+      to specific namespaces or using namespaceSelector for better control.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-missing-exclude-kyverno-namespace
+    patterns:
+      - pattern-inside: |
+          kind: ClusterPolicy
+          ...
+      - pattern: |
+          spec:
+            rules:
+              - ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            rules:
+              - ...
+                exclude:
+                  ...
+                  resources:
+                    ...
+                    namespaces:
+                      - kyverno
+    message: >-
+      ClusterPolicy does not exclude the kyverno namespace. Consider excluding
+      kyverno system namespace to prevent policy conflicts with Kyverno's own
+      resources.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-missing-exclude-system-namespaces
+    patterns:
+      - pattern-inside: |
+          kind: ClusterPolicy
+          ...
+      - pattern: |
+          spec:
+            rules:
+              - ...
+                validate:
+                  ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            rules:
+              - ...
+                exclude:
+                  ...
+    message: >-
+      ClusterPolicy validation rule has no exclusions. Consider excluding
+      system namespaces (kube-system, kube-public, kyverno) to prevent
+      breaking critical system components.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # VALIDATION RULES
+  # ============================================================================
+
+  - id: kyverno-validate-missing-message
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          validate:
+            pattern:
+              ...
+      - pattern-not-inside: |
+          validate:
+            ...
+            message: $MSG
+    message: >-
+      Kyverno validate rule is missing a message. Without a message, users
+      won't understand why their resource was rejected. Add a descriptive
+      message explaining the policy requirement.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-validate-deny-missing-message
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          validate:
+            deny:
+              ...
+      - pattern-not-inside: |
+          validate:
+            ...
+            message: $MSG
+    message: >-
+      Kyverno deny rule is missing a message. Users need clear feedback when
+      their resources are denied. Add a descriptive message.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-validate-empty-pattern
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          validate:
+            pattern: {}
+    message: >-
+      Kyverno validate rule has an empty pattern. This will match everything
+      and provides no validation. Define specific pattern criteria.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-anypattern-single-item
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          validate:
+            anyPattern:
+              - ...
+      - pattern-not: |
+          validate:
+            anyPattern:
+              - ...
+              - ...
+    message: >-
+      Kyverno anyPattern has only one pattern. Use 'pattern' instead of
+      'anyPattern' when there's only one option, or add additional patterns.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # MUTATION RULES
+  # ============================================================================
+
+  - id: kyverno-mutate-missing-patchstrategicmerge-and-patchesjson6902
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          mutate:
+            ...
+      - pattern-not-inside: |
+          mutate:
+            ...
+            patchStrategicMerge:
+              ...
+      - pattern-not-inside: |
+          mutate:
+            ...
+            patchesJson6902: $PATCH
+      - pattern-not-inside: |
+          mutate:
+            ...
+            foreach:
+              ...
+    message: >-
+      Kyverno mutate rule is missing mutation specification. Use
+      patchStrategicMerge, patchesJson6902, or foreach to define mutations.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-mutate-targets-without-context
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          mutate:
+            targets:
+              - ...
+      - pattern-not-inside: |
+          rules:
+            - ...
+              context:
+                ...
+              mutate:
+                targets:
+                  - ...
+    message: >-
+      Kyverno mutate rule uses targets without context. When mutating
+      external resources, you often need context to reference the trigger
+      resource data.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # GENERATE RULES
+  # ============================================================================
+
+  - id: kyverno-generate-missing-synchronize
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          generate:
+            ...
+            kind: $GENKIND
+      - pattern-not-inside: |
+          generate:
+            ...
+            synchronize: $SYNC
+    message: >-
+      Kyverno generate rule does not specify 'synchronize'. When false
+      (default), generated resources are not kept in sync with the source.
+      Set explicitly to document intent.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-generate-missing-data-or-clone
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          generate:
+            apiVersion: $API
+            kind: $GENKIND
+            name: $NAME
+      - pattern-not-inside: |
+          generate:
+            ...
+            data:
+              ...
+      - pattern-not-inside: |
+          generate:
+            ...
+            clone:
+              ...
+    message: >-
+      Kyverno generate rule is missing 'data' or 'clone'. Generate rules must
+      specify either inline data or a resource to clone.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-generate-clone-without-namespace
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          generate:
+            ...
+            clone:
+              name: $NAME
+      - pattern-not-inside: |
+          generate:
+            ...
+            clone:
+              ...
+              namespace: $NS
+    message: >-
+      Kyverno generate clone is missing namespace. For namespaced resources,
+      specify the namespace of the source resource to clone.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # IMAGE VERIFICATION RULES
+  # ============================================================================
+
+  - id: kyverno-verifyimages-missing-attestations-or-attestors
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          verifyImages:
+            - image: $IMAGE
+      - pattern-not-inside: |
+          verifyImages:
+            - image: $IMAGE
+              ...
+              attestations:
+                ...
+      - pattern-not-inside: |
+          verifyImages:
+            - image: $IMAGE
+              ...
+              attestors:
+                ...
+    message: >-
+      Kyverno verifyImages rule is missing attestations or attestors. Define
+      signature verification requirements using attestors or attestations.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-verifyimages-wildcard
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          verifyImages:
+            - image: "*"
+    message: >-
+      Kyverno verifyImages uses wildcard '*' for all images. This requires
+      all images to be signed which may break system containers. Scope to
+      specific registries or image patterns.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-verifyimages-no-mutate-digest
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          verifyImages:
+            - image: $IMAGE
+              ...
+              mutateDigest: false
+    message: >-
+      Kyverno verifyImages has mutateDigest disabled. Without digest mutation,
+      image tags can be moved to different images after verification. Consider
+      enabling mutateDigest for stronger security.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-verifyimages-required-false
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          verifyImages:
+            - image: $IMAGE
+              ...
+              required: false
+    message: >-
+      Kyverno verifyImages has required=false. This means unsigned images
+      will be allowed. Set required=true to enforce image signing.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # CONTEXT AND VARIABLES
+  # ============================================================================
+
+  - id: kyverno-context-api-call-no-jmespath
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          context:
+            - name: $NAME
+              apiCall:
+                urlPath: $URL
+      - pattern-not-inside: |
+          context:
+            - name: $NAME
+              apiCall:
+                ...
+                jmesPath: $JP
+    message: >-
+      Kyverno API call context is missing jmesPath. Without jmesPath, the
+      entire API response is stored which may be inefficient. Use jmesPath
+      to extract only needed data.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: performance
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-context-configmap-no-namespace
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          context:
+            - name: $NAME
+              configMap:
+                name: $CM
+      - pattern-not-inside: |
+          context:
+            - name: $NAME
+              configMap:
+                ...
+                namespace: $NS
+    message: >-
+      Kyverno ConfigMap context is missing namespace. The ConfigMap will be
+      looked up in the resource's namespace which may not be intended.
+      Specify the namespace explicitly.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-hardcoded-image-registry
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern-regex: "image:\\s*[\"']?[a-zA-Z0-9.-]+\\.(io|com|net|org)/"
+    message: >-
+      Kyverno policy contains hardcoded registry URL. Consider using variables
+      or ConfigMap references for registry URLs to make policies more portable.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: maintainability
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # PRECONDITIONS
+  # ============================================================================
+
+  - id: kyverno-preconditions-deprecated-format
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          preconditions:
+            - key: $KEY
+              operator: $OP
+              value: $VAL
+    message: >-
+      Kyverno preconditions using deprecated list format. Use the new 'any'
+      and 'all' structure for preconditions for better clarity and control.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: deprecation
+      technology: [kyverno, kubernetes]
+      references:
+        - https://kyverno.io/docs/writing-policies/preconditions/
+
+  - id: kyverno-preconditions-empty
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          preconditions:
+            all: []
+    message: >-
+      Kyverno preconditions has empty 'all' list. This is effectively no
+      precondition. Either add conditions or remove the preconditions block.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # WEBHOOK CONFIGURATION
+  # ============================================================================
+
+  - id: kyverno-webhook-timeout-too-high
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          spec:
+            ...
+            webhookTimeoutSeconds: $TIMEOUT
+      - metavariable-comparison:
+          metavariable: $TIMEOUT
+          comparison: $TIMEOUT > 20
+    message: >-
+      Kyverno webhook timeout is set above 20 seconds. High timeouts can
+      impact API server performance and user experience. Consider optimizing
+      the policy or reducing the timeout.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: performance
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-failure-policy-ignore
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          spec:
+            ...
+            failurePolicy: Ignore
+    message: >-
+      Kyverno policy has failurePolicy=Ignore. If Kyverno fails or times out,
+      resources will be admitted without policy checks. Use 'Fail' for
+      critical security policies.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # POLICY EXCEPTIONS
+  # ============================================================================
+
+  - id: kyverno-exception-wildcard-policy
+    patterns:
+      - pattern-inside: |
+          kind: PolicyException
+          ...
+      - pattern: |
+          spec:
+            ...
+            exceptions:
+              - policyName: "*"
+    message: >-
+      PolicyException uses wildcard for policyName. This exempts resources
+      from ALL policies which is dangerous. Specify explicit policy names.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-exception-wildcard-rule
+    patterns:
+      - pattern-inside: |
+          kind: PolicyException
+          ...
+      - pattern: |
+          spec:
+            ...
+            exceptions:
+              - ...
+                ruleNames:
+                  - "*"
+    message: >-
+      PolicyException uses wildcard for ruleNames. This exempts from all
+      rules in the policy. Specify explicit rule names for better control.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-exception-missing-match
+    patterns:
+      - pattern-inside: |
+          kind: PolicyException
+          ...
+      - pattern: |
+          spec:
+            exceptions:
+              - ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            match:
+              ...
+    message: >-
+      PolicyException is missing match criteria. Without match, the exception
+      scope is unclear. Define which resources this exception applies to.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-exception-broad-namespace
+    patterns:
+      - pattern-inside: |
+          kind: PolicyException
+          ...
+      - pattern: |
+          match:
+            any:
+              - resources:
+                  namespaces:
+                    - "*"
+    message: >-
+      PolicyException matches all namespaces. This creates a very broad
+      exception. Scope to specific namespaces for better security.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # DEPRECATED FEATURES
+  # ============================================================================
+
+  - id: kyverno-deprecated-api-version
+    patterns:
+      - pattern: |
+          apiVersion: kyverno.io/v1alpha1
+    message: >-
+      Kyverno API version v1alpha1 is deprecated. Migrate to kyverno.io/v1
+      or kyverno.io/v2beta1 for newer features.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: deprecation
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-deprecated-validate-deny-conditions
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          validate:
+            deny:
+              conditions:
+                - key: $KEY
+                  operator: $OP
+                  value: $VAL
+    message: >-
+      Kyverno deny conditions using deprecated list format. Use 'any' and
+      'all' structure for conditions.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: deprecation
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-deprecated-overlay
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          mutate:
+            overlay:
+              ...
+    message: >-
+      Kyverno 'overlay' mutation is deprecated. Use 'patchStrategicMerge'
+      instead for the same functionality.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: deprecation
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # PERFORMANCE AND EFFICIENCY
+  # ============================================================================
+
+  - id: kyverno-too-many-rules
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          spec:
+            rules:
+              - ...
+              - ...
+              - ...
+              - ...
+              - ...
+              - ...
+              - ...
+              - ...
+              - ...
+              - ...
+              - ...
+    message: >-
+      Kyverno policy has more than 10 rules. Consider splitting into multiple
+      policies for better maintainability and performance.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: maintainability
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-complex-jmespath
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern-regex: "jmesPath:\\s*[\"']?.{200,}"
+    message: >-
+      Kyverno policy contains very long JMESPath expression. Complex
+      expressions can impact performance and are hard to maintain. Consider
+      breaking into multiple context variables.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: maintainability
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-foreach-without-list
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          foreach:
+            - ...
+      - pattern-not-inside: |
+          foreach:
+            - list: $LIST
+              ...
+    message: >-
+      Kyverno foreach is missing 'list' specification. Foreach requires a
+      list to iterate over.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # SECURITY BEST PRACTICES
+  # ============================================================================
+
+  - id: kyverno-audit-mode-security-policy
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          spec:
+            ...
+            validationFailureAction: Audit
+            rules:
+              - name: $NAME
+                ...
+                validate:
+                  ...
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(privileged|root|capabilities|security|hostpath|hostnetwork|hostipc|hostpid).*
+    message: >-
+      Security-related Kyverno policy is in Audit mode. Consider setting
+      validationFailureAction to 'Enforce' for security policies to actually
+      block violations.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-missing-pod-security-standards
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          metadata:
+            name: $NAME
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*pod.*security.*
+      - pattern-not-inside: |
+          validate:
+            podSecurity:
+              ...
+    message: >-
+      Policy name suggests Pod Security Standards but doesn't use the
+      built-in podSecurity validation. Consider using Kyverno's native
+      Pod Security Standards support.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+      references:
+        - https://kyverno.io/docs/writing-policies/validate/#pod-security
+
+  # ============================================================================
+  # LABEL AND ANNOTATION PATTERNS
+  # ============================================================================
+
+  - id: kyverno-missing-policy-category-label
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          metadata:
+            name: $NAME
+      - pattern-not-inside: |
+          metadata:
+            ...
+            annotations:
+              ...
+              policies.kyverno.io/category: $CAT
+    message: >-
+      Kyverno policy is missing category annotation. Add
+      'policies.kyverno.io/category' annotation to help organize and
+      filter policies.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-missing-policy-description
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          metadata:
+            name: $NAME
+      - pattern-not-inside: |
+          metadata:
+            ...
+            annotations:
+              ...
+              policies.kyverno.io/description: $DESC
+    message: >-
+      Kyverno policy is missing description annotation. Add
+      'policies.kyverno.io/description' to document what the policy does.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # CLEANUP POLICIES
+  # ============================================================================
+
+  - id: kyverno-cleanup-missing-schedule
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterCleanupPolicy|CleanupPolicy)$
+      - pattern: |
+          spec:
+            ...
+      - pattern-not-inside: |
+          spec:
+            ...
+            schedule: $SCHEDULE
+    message: >-
+      Kyverno CleanupPolicy is missing schedule. Cleanup policies require
+      a cron schedule to define when cleanup runs.
+    languages: [yaml]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-cleanup-dangerous-match
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterCleanupPolicy|CleanupPolicy)$
+      - pattern: |
+          match:
+            any:
+              - resources:
+                  kinds:
+                    - $RESOURCE
+      - metavariable-regex:
+          metavariable: $RESOURCE
+          regex: ^(Secret|ConfigMap|PersistentVolumeClaim|PersistentVolume|\*)$
+    message: >-
+      Kyverno CleanupPolicy targets sensitive resources ($RESOURCE). Ensure
+      proper conditions are in place to prevent accidental deletion of
+      important resources.
+    languages: [yaml]
+    severity: WARNING
+    metadata:
+      category: security
+      technology: [kyverno, kubernetes]
+
+  # ============================================================================
+  # AUTOGEN RULES
+  # ============================================================================
+
+  - id: kyverno-autogen-disabled-pod-controllers
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          metadata:
+            ...
+            annotations:
+              ...
+              pod-policies.kyverno.io/autogen-controllers: none
+    message: >-
+      Kyverno policy has autogen disabled for pod controllers. Rules targeting
+      Pods won't automatically apply to Deployments, DaemonSets, etc. Ensure
+      this is intentional.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
+
+  - id: kyverno-autogen-limited
+    patterns:
+      - pattern-inside: |
+          kind: $KIND
+          ...
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(ClusterPolicy|Policy)$
+      - pattern: |
+          metadata:
+            ...
+            annotations:
+              ...
+              pod-policies.kyverno.io/autogen-controllers: $CONTROLLERS
+      - metavariable-regex:
+          metavariable: $CONTROLLERS
+          regex: ^(?!none$).*$
+    message: >-
+      Kyverno policy limits autogen to specific controllers. Ensure all
+      intended pod controllers are included or auto-generation is
+      intentionally restricted.
+    languages: [yaml]
+    severity: INFO
+    metadata:
+      category: best-practice
+      technology: [kyverno, kubernetes]
