@@ -1,0 +1,827 @@
+rules:
+  # =============================================================================
+  # ArgoCD Application Security Rules
+  # =============================================================================
+
+  - id: argocd-application-automated-sync-without-prune-propagation
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Application has automated sync enabled without explicit prune and
+      self-heal settings. This could lead to unexpected resource deletion or
+      drift. Consider explicitly setting `prune: true/false` and `selfHeal: true/false`
+      to make the sync behavior predictable.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-1188: Initialization with Hard-Coded Network Resource Configuration Value"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          ...
+      - pattern: |
+          syncPolicy:
+            automated: {}
+
+  - id: argocd-application-allow-empty-sync
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Application allows syncing even when there are no resources to sync.
+      Setting `allowEmpty: true` can be dangerous as it may accidentally delete
+      all resources in the target namespace if the source becomes empty.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-862: Missing Authorization"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          ...
+      - pattern: |
+          syncPolicy:
+            ...
+            syncOptions:
+              ...
+              - AllowEmpty=true
+
+  - id: argocd-application-skip-schema-validation
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Application skips schema validation. This can allow invalid
+      Kubernetes manifests to be deployed, potentially causing runtime errors
+      or security issues.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-20: Improper Input Validation"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          ...
+      - pattern: |
+          syncPolicy:
+            ...
+            syncOptions:
+              ...
+              - Validate=false
+
+  - id: argocd-application-force-sync-enabled
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Application has force sync enabled in automated sync policy. This
+      will force overwrite resources even when they have been modified outside
+      of Git, potentially destroying important manual changes or emergency fixes.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-284: Improper Access Control"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          ...
+      - pattern: |
+          syncPolicy:
+            automated:
+              ...
+              prune: true
+              ...
+              selfHeal: true
+              ...
+
+  - id: argocd-application-wildcard-destination
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Application uses wildcard (*) for destination server or namespace.
+      This could allow deployment to unintended clusters or namespaces.
+      Consider using explicit destination values.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-284: Improper Access Control"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          ...
+      - pattern-either:
+          - pattern: |
+              destination:
+                ...
+                server: "*"
+          - pattern: |
+              destination:
+                ...
+                namespace: "*"
+
+  - id: argocd-application-using-default-project
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Application is using the 'default' project. The default project
+      has no restrictions and can deploy to any cluster/namespace. Consider
+      creating a dedicated project with appropriate restrictions.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-269: Improper Privilege Management"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          ...
+      - pattern: |
+          spec:
+            ...
+            project: default
+
+  # =============================================================================
+  # ArgoCD Project Security Rules
+  # =============================================================================
+
+  - id: argocd-project-wildcard-source-repos
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Project allows any source repository using wildcard (*). This
+      permits applications to be created from any Git repository, which could
+      allow malicious code deployment. Restrict to specific, trusted repositories.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-284: Improper Access Control"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: AppProject
+          ...
+      - pattern: |
+          sourceRepos:
+            - "*"
+
+  - id: argocd-project-wildcard-destinations
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Project allows deployment to any cluster or namespace using
+      wildcards. This could lead to unintended deployments across clusters.
+      Restrict destinations to specific clusters and namespaces.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-284: Improper Access Control"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: AppProject
+          ...
+      - pattern-either:
+          - pattern: |
+              destinations:
+                - namespace: "*"
+                  server: "*"
+          - pattern: |
+              destinations:
+                - server: "*"
+                  namespace: "*"
+
+  - id: argocd-project-allows-cluster-resources
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Project allows cluster-scoped resources (like ClusterRole,
+      ClusterRoleBinding, Namespace). This grants significant privileges and
+      could allow privilege escalation. Consider restricting to namespace-scoped
+      resources only.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-269: Improper Privilege Management"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: AppProject
+          ...
+      - pattern-either:
+          - pattern: |
+              clusterResourceWhitelist:
+                - group: "*"
+                  kind: "*"
+          - pattern: |
+              clusterResourceWhitelist:
+                - group: "rbac.authorization.k8s.io"
+                  kind: ClusterRole
+          - pattern: |
+              clusterResourceWhitelist:
+                - group: "rbac.authorization.k8s.io"
+                  kind: ClusterRoleBinding
+
+  - id: argocd-project-empty-role-restrictions
+    languages:
+      - yaml
+    message: >-
+      ArgoCD Project has roles defined without proper resource restrictions.
+      Ensure all roles have explicit policies defining allowed actions on
+      applications and resources.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-269: Improper Privilege Management"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: AppProject
+          ...
+      - pattern: |
+          roles:
+            - name: $ROLE
+              policies: []
+
+  # =============================================================================
+  # ArgoCD ConfigMap Security Rules
+  # =============================================================================
+
+  - id: argocd-cm-anonymous-enabled
+    languages:
+      - yaml
+    message: >-
+      ArgoCD has anonymous user access enabled. Anonymous users can access
+      ArgoCD without authentication, which is a significant security risk.
+      Disable anonymous access in production environments.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-287: Improper Authentication"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-cm
+            ...
+          ...
+      - pattern: |
+          data:
+            ...
+            users.anonymous.enabled: "true"
+
+  - id: argocd-cm-insecure-oidc-tls
+    languages:
+      - yaml
+    message: >-
+      ArgoCD is configured to skip TLS verification for OIDC. This makes the
+      authentication vulnerable to man-in-the-middle attacks. Enable TLS
+      verification in production environments.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-295: Improper Certificate Validation"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-cm
+            ...
+          ...
+      - pattern: |
+          data:
+            ...
+            oidc.tls.insecure.skip.verify: "true"
+
+  - id: argocd-cm-admin-enabled
+    languages:
+      - yaml
+    message: >-
+      ArgoCD has the admin user enabled. The built-in admin account should be
+      disabled in production after setting up SSO/OIDC authentication for
+      improved security and auditability.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-cm
+            ...
+          ...
+      - pattern-not: |
+          data:
+            ...
+            admin.enabled: "false"
+
+  - id: argocd-cm-weak-password-pattern
+    languages:
+      - yaml
+    message: >-
+      ArgoCD has a weak password pattern configured. The minimum password
+      length should be at least 12 characters for adequate security.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-521: Weak Password Requirements"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-cm
+            ...
+          ...
+      - pattern-regex: 'passwordPattern:\s*"\^\.\{[0-9],([0-9]|1[01])\}\$"'
+
+  - id: argocd-cm-exec-enabled
+    languages:
+      - yaml
+    message: >-
+      ArgoCD has exec functionality enabled. This allows users to execute
+      commands in application pods, which can be a security risk. Disable
+      exec unless absolutely necessary.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-78: OS Command Injection"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/web-based-terminal/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-cm
+            ...
+          ...
+      - pattern: |
+          data:
+            ...
+            exec.enabled: "true"
+
+  # =============================================================================
+  # ArgoCD RBAC ConfigMap Security Rules
+  # =============================================================================
+
+  - id: argocd-rbac-wildcard-permissions
+    languages:
+      - yaml
+    message: >-
+      ArgoCD RBAC policy grants wildcard permissions. This allows unrestricted
+      access to all applications and resources. Use specific, least-privilege
+      permissions instead.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-269: Improper Privilege Management"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-rbac-cm
+            ...
+          ...
+      - pattern-regex: 'p,\s*\*,\s*\*,\s*\*,\s*\*/\*,\s*allow'
+
+  - id: argocd-rbac-overly-permissive-default
+    languages:
+      - yaml
+    message: >-
+      ArgoCD RBAC default policy is set to 'role:admin'. This grants admin
+      privileges to all authenticated users by default. Consider using
+      'role:readonly' or a custom role with minimal permissions as default.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-269: Improper Privilege Management"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-rbac-cm
+            ...
+          ...
+      - pattern: |
+          data:
+            ...
+            policy.default: role:admin
+
+  - id: argocd-rbac-delete-all-allowed
+    languages:
+      - yaml
+    message: >-
+      ArgoCD RBAC policy allows delete action on all applications. This is
+      overly permissive and could lead to accidental or malicious deletion
+      of applications. Restrict delete permissions to specific projects
+      or applications.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-269: Improper Privilege Management"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-rbac-cm
+            ...
+          ...
+      - pattern-regex: 'p,.*,\s*applications,\s*delete,\s*\*/\*,\s*allow'
+
+  # =============================================================================
+  # ArgoCD Server and Deployment Security Rules
+  # =============================================================================
+
+  - id: argocd-server-insecure-mode
+    languages:
+      - yaml
+    message: >-
+      ArgoCD server is running in insecure mode without TLS. This exposes
+      credentials and data to network sniffing attacks. Enable TLS for
+      production deployments.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-319: Cleartext Transmission of Sensitive Information"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/tls/
+    patterns:
+      - pattern-inside: |
+          kind: Deployment
+          metadata:
+            name: argocd-server
+            ...
+          ...
+      - pattern: |
+          containers:
+            - ...
+              args:
+                ...
+                - --insecure
+                ...
+
+  - id: argocd-server-disable-auth
+    languages:
+      - yaml
+    message: >-
+      ArgoCD server has authentication disabled. This allows anyone to access
+      and modify ArgoCD without credentials. Enable authentication for
+      production environments.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-287: Improper Authentication"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/
+    patterns:
+      - pattern-inside: |
+          kind: Deployment
+          metadata:
+            name: argocd-server
+            ...
+          ...
+      - pattern: |
+          containers:
+            - ...
+              args:
+                ...
+                - --disable-auth
+                ...
+
+  # =============================================================================
+  # ArgoCD Repository Credentials Security Rules
+  # =============================================================================
+
+  - id: argocd-repo-plaintext-password
+    languages:
+      - yaml
+    message: >-
+      ArgoCD repository configuration contains plaintext password. Use
+      Kubernetes Secrets with proper encryption or external secret management
+      solutions instead of embedding credentials in ConfigMaps.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-312: Cleartext Storage of Sensitive Information"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#repositories
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          ...
+      - pattern: |
+          repositories: |
+            ...
+            password: $PASSWORD
+            ...
+      - metavariable-regex:
+          metavariable: $PASSWORD
+          regex: '^[^$].*$'
+
+  - id: argocd-repo-skip-server-verification
+    languages:
+      - yaml
+    message: >-
+      ArgoCD repository configuration skips server certificate verification.
+      This makes connections vulnerable to man-in-the-middle attacks.
+      Enable server verification for production environments.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-295: Improper Certificate Validation"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#repositories
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            labels:
+              argocd.argoproj.io/secret-type: repository
+          ...
+      - pattern: |
+          stringData:
+            ...
+            insecure: "true"
+
+  # =============================================================================
+  # ArgoCD Notifications Security Rules
+  # =============================================================================
+
+  - id: argocd-notification-plaintext-webhook-secret
+    languages:
+      - yaml
+    message: >-
+      ArgoCD notification configuration contains plaintext webhook secrets.
+      Store webhook secrets in Kubernetes Secrets with proper encryption.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-312: Cleartext Storage of Sensitive Information"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/notifications/
+    patterns:
+      - pattern-inside: |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: argocd-notifications-cm
+            ...
+          ...
+      - pattern-regex: '(slack-token|webhook|password|secret|token|apikey|api_key):\s*["\']?[a-zA-Z0-9_-]{10,}["\']?'
+
+  # =============================================================================
+  # ArgoCD ApplicationSet Security Rules
+  # =============================================================================
+
+  - id: argocd-appset-cluster-generator-all-clusters
+    languages:
+      - yaml
+    message: >-
+      ArgoCD ApplicationSet uses cluster generator without filters. This will
+      create applications in ALL registered clusters, which may include
+      unintended environments. Add selector filters to target specific clusters.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-284: Improper Access Control"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: ApplicationSet
+          ...
+      - pattern: |
+          generators:
+            - clusters: {}
+
+  - id: argocd-appset-git-generator-all-branches
+    languages:
+      - yaml
+    message: >-
+      ArgoCD ApplicationSet Git generator matches all branches. Consider
+      restricting to specific branches (e.g., main, release/*) to prevent
+      accidental deployments from feature branches.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-284: Improper Access Control"
+      references:
+        - https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Git/
+    patterns:
+      - pattern-inside: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: ApplicationSet
+          ...
+      - pattern: |
+          generators:
+            - git:
+                ...
+                revision: "*"
+
+  # =============================================================================
+  # General Kubernetes Security Rules for ArgoCD Resources
+  # =============================================================================
+
+  - id: argocd-pod-running-as-root
+    languages:
+      - yaml
+    message: >-
+      ArgoCD pod is configured to run as root. Running containers as root
+      increases the impact of container escape vulnerabilities. Configure
+      pods to run as non-root users.
+    severity: WARNING
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-250: Execution with Unnecessary Privileges"
+      references:
+        - https://kubernetes.io/docs/concepts/security/pod-security-standards/
+    patterns:
+      - pattern-inside: |
+          kind: Deployment
+          metadata:
+            name: argocd-$COMPONENT
+            ...
+          ...
+      - pattern: |
+          securityContext:
+            ...
+            runAsNonRoot: false
+
+  - id: argocd-pod-privileged-container
+    languages:
+      - yaml
+    message: >-
+      ArgoCD container is running in privileged mode. Privileged containers
+      have full access to the host, defeating container isolation. Remove
+      privileged mode unless absolutely necessary.
+    severity: ERROR
+    metadata:
+      category: security
+      technology:
+        - argocd
+        - kubernetes
+      cwe:
+        - "CWE-250: Execution with Unnecessary Privileges"
+      references:
+        - https://kubernetes.io/docs/concepts/security/pod-security-standards/
+    patterns:
+      - pattern-inside: |
+          kind: Deployment
+          metadata:
+            name: argocd-$COMPONENT
+            ...
+          ...
+      - pattern: |
+          securityContext:
+            ...
+            privileged: true
