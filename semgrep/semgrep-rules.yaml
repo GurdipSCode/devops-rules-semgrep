@@ -1,0 +1,148 @@
+# CodeRabbit Configuration for Semgrep Rules Repository
+# Documentation: https://docs.coderabbit.ai/guides/configure-coderabbit
+
+version: "1.0.0"
+
+language: en-US
+
+tone_instructions: >
+  Be concise and technical. Focus on security best practices, 
+  Semgrep rule quality, and potential false positives/negatives.
+
+early_access: false
+
+enable_free_tier: true
+
+reviews:
+  # Enable review features
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  auto_title_placeholder: "@coderabbitai"
+  
+  # Review settings
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: false
+  changed_files_summary: true
+  
+  # Poem feature (disable for professional repos)
+  poem: false
+  
+  # Path-based instructions for Semgrep YAML rules
+  path_instructions:
+    - path: "**/*.yaml"
+      instructions: |
+        Review this Semgrep rule YAML file with focus on:
+        
+        **Rule Structure & Syntax:**
+        - Verify the rule has all required fields: `id`, `message`, `severity`, `languages`, and a pattern field
+        - Check that `id` follows naming conventions (lowercase, hyphens, descriptive)
+        - Ensure `severity` is appropriate: ERROR for high-impact security issues, WARNING for best practices, INFO for informational
+        - Validate that `languages` array contains valid Semgrep-supported languages
+        
+        **Pattern Quality:**
+        - Check for overly broad patterns that may cause false positives
+        - Look for overly specific patterns that may miss variants (false negatives)
+        - Verify metavariable naming is consistent ($VAR, $FUNC, etc.)
+        - Check if `pattern-either`, `pattern-inside`, `pattern-not`, `pattern-not-inside` are used correctly
+        - Ensure patterns are properly indented using YAML literal blocks (|) where appropriate
+        
+        **Metadata Quality:**
+        - Verify `category` is set (security, correctness, best-practice, performance)
+        - Check for `cwe` references for security rules
+        - Ensure `references` contain valid, helpful URLs
+        - Verify `technology` tags are accurate
+        - Check for `likelihood`, `impact`, and `confidence` metadata for security rules
+        
+        **Message Quality:**
+        - Message should clearly explain WHAT is wrong
+        - Message should explain WHY it's a problem
+        - Message should suggest HOW to fix it
+        - Check for typos and grammar issues
+        
+        **Testing Considerations:**
+        - Consider if the rule would benefit from `fix` or `fix-regex` for auto-remediation
+        - Think about edge cases the rule might miss
+        - Consider if `options` like `symbolic_propagation` or `interfile` might be needed
+
+    - path: "**/*.yml"
+      instructions: |
+        Review this Semgrep rule YAML file with the same criteria as .yaml files.
+        Focus on rule correctness, pattern quality, and metadata completeness.
+
+    - path: "**/test/**/*.yaml"
+      instructions: |
+        This is a Semgrep test file. Review for:
+        - Proper use of `# ruleid:` comments for true positives
+        - Proper use of `# ok:` comments for true negatives
+        - Sufficient test coverage for edge cases
+        - Test cases that match the rule's intended scope
+
+    - path: "**/test/**/*.yml"
+      instructions: |
+        This is a Semgrep test file. Apply the same test file review criteria.
+
+# Chat configuration
+chat:
+  auto_reply: true
+
+# Tools configuration
+tools:
+  # Enable/disable specific tools
+  shellcheck:
+    enabled: false
+  
+  ruff:
+    enabled: false
+  
+  markdownlint:
+    enabled: false
+  
+  github-checks:
+    enabled: true
+    timeout_ms: 90000
+  
+  # YAML linting
+  yamllint:
+    enabled: true
+  
+  # Semgrep scanning (if you want CodeRabbit to run Semgrep on your rules)
+  semgrep:
+    enabled: true
+  
+  # Language server for better analysis
+  languagetool:
+    enabled: true
+    enabled_only: false
+    level: picky
+    enabled_rules: []
+    disabled_rules:
+      - WHITESPACE_RULE
+      - COMMA_PARENTHESIS_WHITESPACE
+    enabled_categories: []
+    disabled_categories:
+      - TYPOGRAPHY
+
+  # Biome for JSON/YAML
+  biome:
+    enabled: false
+
+  # Hadolint for Dockerfiles (if present)
+  hadolint:
+    enabled: false
+
+# Knowledge base for context
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  jira:
+    project_keys: []
+  linear:
+    team_keys: []
+  pull_requests:
+    scope: auto
